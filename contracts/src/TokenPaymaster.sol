@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "@aa/contracts/interfaces/IEntryPoint.sol";
 import "@aa/contracts/core/BasePaymaster.sol";
 import "@aa/contracts/core/Helpers.sol";
+import "./utils/UniswapHelper.sol";
 import "./utils/OracleHelper.sol";
 
 /// @title Sample ERC-20 Token Paymaster for ERC-4337
@@ -22,12 +23,14 @@ import "./utils/OracleHelper.sol";
 /// It also allows updating price configuration and withdrawing tokens by the contract owner.
 /// The contract uses an Oracle to fetch the latest token prices.
 /// @dev Inherits from BasePaymaster.
-contract TokenPaymaster is BasePaymaster, OracleHelper {
+contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
     using UserOperationLib for PackedUserOperation;
 
     struct TokenPaymasterConfig {
         /// @notice The price markup percentage applied to the token price (1e26 = 100%). Ranges from 1e26 to 2e26
         uint256 priceMarkup;
+        /// @notice Exchange tokens to native currency if the EntryPoint balance of this Paymaster falls below this value
+        uint128 minEntryPointBalance;
         /// @notice Estimated gas cost for refunding tokens after the transaction is completed
         uint48 refundPostopCost;
         /// @notice Transactions are only valid as long as the cached price is not older than this value
@@ -50,9 +53,6 @@ contract TokenPaymaster is BasePaymaster, OracleHelper {
 
     TokenPaymasterConfig public tokenPaymasterConfig;
 
-    /// @notice The ERC20 token used for transaction fee payments
-    IERC20Metadata public immutable token;
-
     /// @notice Initializes the TokenPaymaster contract with the given parameters.
     /// @param _token The ERC20 token used for transaction fee payments.
     /// @param _entryPoint The EntryPoint contract used in the Account Abstraction infrastructure.
@@ -62,10 +62,17 @@ contract TokenPaymaster is BasePaymaster, OracleHelper {
     constructor(
         IERC20Metadata _token,
         IEntryPoint _entryPoint,
+        IERC20 _wrappedNative,
+        ISwapRouter _uniswap,
         TokenPaymasterConfig memory _tokenPaymasterConfig,
         OracleHelperConfig memory _oracleHelperConfig,
+        UniswapHelperConfig memory _uniswapHelperConfig,
         address _owner
-    ) BasePaymaster(_entryPoint) OracleHelper(_oracleHelperConfig) {
+    )
+        BasePaymaster(_entryPoint)
+        OracleHelper(_oracleHelperConfig)
+        UniswapHelper(_token, _wrappedNative, _uniswap, _uniswapHelperConfig)
+    {
         token = _token;
         setTokenPaymasterConfig(_tokenPaymasterConfig);
         transferOwnership(_owner);
@@ -86,6 +93,12 @@ contract TokenPaymaster is BasePaymaster, OracleHelper {
         );
         tokenPaymasterConfig = _tokenPaymasterConfig;
         emit ConfigUpdated(_tokenPaymasterConfig);
+    }
+
+    function setUniswapConfiguration(
+        UniswapHelperConfig memory _uniswapHelperConfig
+    ) external onlyOwner {
+        _setUniswapHelperConfiguration(_uniswapHelperConfig);
     }
 
     /// @notice Allows the contract owner to withdraw a specified amount of tokens from the contract.
@@ -162,22 +175,6 @@ contract TokenPaymaster is BasePaymaster, OracleHelper {
         }
     }
 
-    function weiToToken(
-        uint256 amount,
-        uint8 tokenDecimals,
-        uint256 price
-    ) public pure returns (uint256) {
-        if (tokenDecimals >= 18) {
-            return
-                (amount * PRICE_DENOMINATOR * 10 ** (tokenDecimals - 18)) /
-                price;
-        } else {
-            return
-                (amount * PRICE_DENOMINATOR) /
-                (price * 10 ** (18 - tokenDecimals));
-        }
-    }
-
     /// @notice Performs post-operation tasks, such as updating the token price and refunding excess tokens.
     /// @dev This function is called after a user operation has been executed or reverted.
     /// @param context The context containing the token amount and user sender address.
@@ -235,6 +232,20 @@ contract TokenPaymaster is BasePaymaster, OracleHelper {
                 actualGasCost,
                 cachedPriceWithMarkup
             );
+            refillEntryPointDeposit(_cachedPrice);
+        }
+    }
+
+    /// @notice If necessary this function uses this Paymaster's token balance to refill the deposit on EntryPoint
+    /// @param _cachedPrice the token price that will be used to calculate the swap amount.
+    function refillEntryPointDeposit(uint256 _cachedPrice) private {
+        uint256 currentEntryPointBalance = entryPoint.balanceOf(address(this));
+        if (
+            currentEntryPointBalance < tokenPaymasterConfig.minEntryPointBalance
+        ) {
+            uint256 swappedWeth = _maybeSwapTokenToWeth(token, _cachedPrice);
+            unwrapWeth(swappedWeth);
+            entryPoint.depositTo{value: address(this).balance}(address(this));
         }
     }
 
