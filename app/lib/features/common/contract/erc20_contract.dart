@@ -12,7 +12,7 @@ class Erc20Contract extends DeployedContract {
     );
   }
 
-  ContractEvent get transferEvent => event('transfer');
+  ContractEvent get transferEvent => event('Transfer');
   ContractEvent get approvalEvent => event('Approval');
   ContractFunction get approve => function('approve');
   ContractFunction get allowance => function('allowance');

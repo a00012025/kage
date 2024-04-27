@@ -1,5 +1,5 @@
+import 'package:app/features/home/controllers/user_balance_controller.dart';
 import 'package:app/features/payment/application/payment_service.dart';
-import 'package:app/features/stealth/stealth_service.dart';
 import 'package:app/utils/app_tap.dart';
 import 'package:app/utils/default_button.dart';
 import 'package:app/utils/gaps.dart';
@@ -8,11 +8,11 @@ import 'package:app/utils/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:web3dart/web3dart.dart';
 
 class SendTokenScreen extends ConsumerStatefulWidget {
-  const SendTokenScreen(this.name, this.addressAndEphemeralPubKey, {super.key});
-  final String name;
-  final StealthAddressAndEphemeralPubKey addressAndEphemeralPubKey;
+  const SendTokenScreen(this.receiver, {super.key});
+  final EthereumAddress receiver;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -45,21 +45,20 @@ class _SendTokenScreenState extends ConsumerState<SendTokenScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      CircleAvatar(
-                        radius: 12,
-                        backgroundColor: Colors.white,
-                        child: Text(
-                          widget.name[0],
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                      Gaps.w8,
-                      Text(
-                          "TO：${widget.addressAndEphemeralPubKey.$1.toFormattedAddress()}",
+                      // CircleAvatar(
+                      //   radius: 12,
+                      //   backgroundColor: Colors.white,
+                      //   child: Text(
+                      //     widget.name[0],
+                      //     style: const TextStyle(
+                      //       fontSize: 14,
+                      //       fontWeight: FontWeight.bold,
+                      //       color: Colors.black,
+                      //     ),
+                      //   ),
+                      // ),
+                      // Gaps.w8,
+                      Text("TO: ${widget.receiver.hex.toFormattedAddress()}",
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -79,7 +78,7 @@ class _SendTokenScreenState extends ConsumerState<SendTokenScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Image.asset(
-                          "assets/icons/USDC.png",
+                          "assets/icons/usdc.png",
                           width: 20,
                         ),
                         Gaps.w4,
@@ -132,11 +131,11 @@ class _SendTokenScreenState extends ConsumerState<SendTokenScreen> {
                       context: context,
                       builder: (_) {
                         return SuccessCard(
-                          address: widget.addressAndEphemeralPubKey.$1,
+                          receiver: widget.receiver,
                           amount: textEditingController.text,
-                          ephPubKey: widget.addressAndEphemeralPubKey.$2,
                         );
                       });
+                  ref.read(userBalanceProvider.notifier).updateState();
                   Navigator.pop(context);
                   Navigator.pop(context);
                 },
@@ -153,14 +152,12 @@ class _SendTokenScreenState extends ConsumerState<SendTokenScreen> {
 class SuccessCard extends StatefulWidget {
   const SuccessCard({
     super.key,
-    required this.address,
+    required this.receiver,
     required this.amount,
-    required this.ephPubKey,
   });
 
-  final String address;
+  final EthereumAddress receiver;
   final String amount;
-  final Uint8List ephPubKey;
 
   @override
   State<SuccessCard> createState() => _SuccessCardState();
@@ -178,8 +175,7 @@ class _SuccessCardState extends State<SuccessCard> {
 
   void asyncInit() async {
     final service = PaymentService();
-    hash = await service.sendUserOperation(
-        widget.amount, widget.address, widget.ephPubKey);
+    hash = await service.sendUserOperation(widget.amount, widget.receiver);
     setState(() {
       isSuccess = true;
     });

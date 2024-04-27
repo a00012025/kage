@@ -9,9 +9,9 @@ import 'package:app/features/payment/application/payment_exception.dart';
 import 'package:app/features/payment/domain/chain.dart';
 import 'package:app/features/payment/domain/user_operation.dart';
 import 'package:app/features/payment/domain/utxo_address.dart';
-import 'package:app/utils/stealth_private_key.dart';
 import 'package:eth_sig_util/eth_sig_util.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:web3dart/crypto.dart';
 import 'package:web3dart/web3dart.dart';
@@ -24,8 +24,7 @@ class PaymentService {
         simpleAccountFactoryContract = SimpleAccountFactoryContract.create();
 
   static Web3Client getWeb3Client() {
-    var httpClient = http.Client();
-    return Web3Client('https://eth-sepolia.public.blastapi.io', httpClient);
+    return Web3Client('https://rpc.ankr.com/arbitrum', http.Client());
   }
 
   Future<List<UtxoAddress>> getAddressesToSend({
@@ -63,41 +62,25 @@ class PaymentService {
     return selectedAddresses;
   }
 
-  Future<UserOperation> signUserOperations(BigInt amountToSend,
-      String toAddress, Uint8List ephPubKey, String mineAddress) async {
-    final approveCallData = encodeErc20ApproveFunctionCall(
-      address: Constants.erc5564Announcer,
+  Future<UserOperation> signUserOperations(
+      BigInt amountToSend, EthereumAddress toAddress) async {
+    final smartContractAccount = Constants.simpleAccount;
+
+    final sendCallData = encodeErc20TransferFunctionCall(
+      to: toAddress,
       amount: amountToSend,
     );
-    final sendCallData = encodeSendTokenFunctionCall(
-      to: EthereumAddress.fromHex(toAddress),
-      tokenAddress: Constants.usdc,
-      amount: amountToSend,
-      pk: bytesToHex(ephPubKey),
+    final callData = encodeExecuteFunctionCall(
+      address: smartContractAccount,
+      params: [Constants.usdc, BigInt.zero, sendCallData],
     );
-
-    final callData = encodeExecuteBatchFunctionCall(
-        address: EthereumAddress.fromHex(mineAddress),
-        params: [
-          [
-            Constants.usdc,
-            Constants.erc5564Announcer,
-          ],
-          [BigInt.zero, BigInt.zero],
-          [approveCallData, sendCallData],
-        ]);
-
-    final seed = StealthPrivateKey.getSeedFromAddress(mineAddress);
-    final privateKey = StealthPrivateKey.aliceStealthPrivateKey(seed);
-
-    final nonce = await getNonce(EthereumAddress.fromHex(mineAddress));
+    final nonce = await getNonce(smartContractAccount);
     debugPrint('=======nonce : $nonce=========');
-    String? initCode;
-//"0xa0371bd6aeccfee005b49709738e49abce65561d"
+    String? initCode; // "0xa0371bd6aeccfee005b49709738e49abce65561d"
     if (nonce == BigInt.zero) {
       final createAccountCallData =
           simpleAccountFactoryContract.function('createAccount').encodeCall([
-        privateKey.address,
+        Constants.simpleAccountOwner,
         Constants.usdc,
         Constants.payMaster,
         BigInt.zero,
@@ -106,21 +89,27 @@ class PaymentService {
           '${Constants.simpleAccountFactory.toString()}${bytesToHex(createAccountCallData)}';
     }
 
+    const paymasterVerificationGasLimit = 100000;
+    const paymasterPostOpGasLimit = 100000;
     final paymasterAndData =
-        "${Constants.payMaster.toString()}${80000.toRadixString(16).padLeft(32, '0')}${80000.toRadixString(16).padLeft(32, '0')}";
+        "${Constants.payMaster.toString()}${paymasterVerificationGasLimit.toRadixString(16).padLeft(32, '0')}${paymasterPostOpGasLimit.toRadixString(16).padLeft(32, '0')}";
 
     final op = UserOperation.partial(
       initCode: initCode,
       nonce: nonce,
       callData: hexlify(callData),
       paymasterAndData: paymasterAndData,
-      sender: EthereumAddress.fromHex(mineAddress),
+      sender: smartContractAccount,
+      verificationGasLimit:
+          nonce == BigInt.zero ? BigInt.from(400000) : BigInt.from(150000),
+      callGasLimit: BigInt.from(50000),
+      preVerificationGas: BigInt.from(40000),
     );
 
-    final chain = Chains.getChain(Network.sepolia);
+    final chain = Chains.getChain(Network.arbitrum);
     log("op.hash(chain): ${bytesToHex(op.hash(chain), include0x: true)}");
     final signature = EthSigUtil.signPersonalMessage(
-      privateKey: bytesToHex(privateKey.privateKey),
+      privateKey: dotenv.env['WALLET_PRIVATE_KEY']!,
       message: op.hash(chain),
     );
 
@@ -130,47 +119,41 @@ class PaymentService {
   }
 
   Future<List<UserOperation>> getUserOperations(
-      String amountToSend, Uint8List ephPubKey, String toAddress) async {
-    final allUtxos = await StealthPrivateKey.getAllUtxo();
+      String amountToSend, EthereumAddress toAddress) async {
     final amount = (double.tryParse(amountToSend) ?? 0.0) * 1000000;
     final rawAmount = BigInt.from(amount);
 
-    final selectedUtxos = await getAddressesToSend(
-      addresses: allUtxos,
-      amountToSend: rawAmount,
-    );
-
     List<UserOperation> ops = [];
-    for (var utxo in selectedUtxos) {
-      final op = await signUserOperations(
-        utxo.balance,
-        toAddress,
-        ephPubKey,
-        utxo.address,
-      );
-      ops.add(op);
-    }
+    final op = await signUserOperations(
+      rawAmount,
+      toAddress,
+    );
+    ops.add(op);
     return ops;
   }
 
   Future<String> sendUserOperation(
-      String sendAmount, String toAddress, Uint8List ephPubKey) async {
-    final ops = await getUserOperations(sendAmount, ephPubKey, toAddress);
+      String sendAmount, EthereumAddress toAddress) async {
+    final ops = await getUserOperations(sendAmount, toAddress);
     final client = getWeb3Client();
-
-    final cred = EthPrivateKey.fromHex(tempPrivateKey);
+    final relayerPrivateKey = dotenv.env['RELAYER_PRIVATE_KEY']!;
+    final privateKey = EthPrivateKey.fromHex(relayerPrivateKey);
+    final gasPrice = await client.getGasPrice();
+    final higherGasPrice = (gasPrice.getInWei.toDouble() * 1.2).toString();
+    final finalGasPrice = BigInt.parse(higherGasPrice.split('.')[0]);
 
     final transaction = Transaction.callContract(
       contract: entryPointContract,
       function: entryPointContract.handleOps,
       parameters: [
         ops.map((e) => e.toList()).toList(),
-        Constants.relaterAddress,
+        privateKey.address,
       ],
       maxGas: 1000000,
+      maxFeePerGas: EtherAmount.inWei(finalGasPrice),
     );
-    final hash = await client.sendTransaction(cred, transaction,
-        chainId: Chains.getChain(Network.sepolia).chainId);
+    final hash = await client.sendTransaction(privateKey, transaction,
+        chainId: Chains.getChain(Network.arbitrum).chainId);
     return hash;
   }
 
@@ -194,7 +177,4 @@ class PaymentService {
         ]);
     return nonce.first;
   }
-
-  final tempPrivateKey =
-      'fd9b486761dee2d9d0c508d7699ea30fbce58406c16150bb2e9bc07e381da827';
 }

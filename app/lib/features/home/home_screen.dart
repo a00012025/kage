@@ -1,14 +1,13 @@
-import 'package:app/features/collect_token/collect_token_screen.dart';
-import 'package:app/features/home/controllers/user_addresses_controller.dart';
+import 'package:app/features/common/constants.dart';
+import 'package:app/features/home/controllers/user_balance_controller.dart';
 import 'package:app/features/home/controllers/user_controller.dart';
+import 'package:app/features/home/controllers/user_txs_controller.dart';
 import 'package:app/features/home/domain/jumping_dot.dart';
-import 'package:app/features/home/domain/userdata.dart';
-import 'package:app/features/payment/domain/utxo_address.dart';
+import 'package:app/features/home/domain/tx_data.dart';
 import 'package:app/features/send_token/scan_address_screen.dart';
 import 'package:app/utils/app_tap.dart';
 import 'package:app/utils/default_button.dart';
 import 'package:app/utils/gaps.dart';
-import 'package:app/utils/stealth_private_key.dart';
 import 'package:app/utils/string_utils.dart';
 import 'package:app/utils/toast.dart';
 import 'package:flutter/material.dart';
@@ -60,8 +59,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final userData = ref.watch(userDataControllerProvider);
-    final userUtxoAddress = ref.watch(userUtxoAddressProvider);
-    debugPrint('======={userUtxoAddress} : $userUtxoAddress=========');
+    final userTxs = ref.watch(userTxsProvider);
+    final userBalance = ref.watch(userBalanceProvider);
+    debugPrint('======={userData} : $userData=========');
+    debugPrint('======={userTxs} : $userTxs=========');
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -69,7 +70,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: AnimationLimiter(
           child: RefreshIndicator(
             onRefresh: () async {
-              ref.read(userUtxoAddressProvider.notifier).updateState();
+              ref.read(userBalanceProvider.notifier).updateState();
+              ref.read(userTxsProvider.notifier).updateState();
             },
             child: CustomScrollView(
               controller: _scrollController,
@@ -82,37 +84,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     collapseMode: CollapseMode.parallax,
                     title: Opacity(
                       opacity: _opacity,
-                      child: AppBarSmall(userData: userData),
+                      child: userBalance.when(
+                          data: (value) => AppBarSmall(balance: value),
+                          error: (error, _) => const AppBarSmall(balance: 0),
+                          loading: () => const AppBarSmall(balance: 0)),
                     ),
-                    background: Column(
+                    background: const Column(
                       children: [
                         Gaps.h32,
-                        TotalBalanceWidget(
-                          userData: userData,
-                        ),
+                        TotalBalanceWidget(),
                         Gaps.h32,
-                        // AppTap(
-                        //   onTap: () {
-                        //     Navigator.push(
-                        //       context,
-                        //       MaterialPageRoute(
-                        //         builder: (context) => const SendTokenScreen(
-                        //             "dora",
-                        //             "0x0a7a51B8887ca23B13d692eC8Cb1CCa4100eda4B"),
-                        //       ),
-                        //     );
-                        //   },
-                        //   child: const Text("test"),
-                        // ),
-                        SendReceieveBtn(
-                          name: userData.name,
-                        ),
+                        SendReceiveBtn(),
                         Gaps.h32,
                       ],
                     ),
                   ),
                 ),
-                userUtxoAddress.when(
+                userTxs.when(
                   data: (value) {
                     return SliverList(
                       delegate: SliverChildBuilderDelegate(
@@ -160,7 +148,7 @@ class TxHistoryItem extends StatelessWidget {
     required this.value,
   });
 
-  final UtxoAddress value;
+  final TxData value;
 
   final emojis = [
     '🥷',
@@ -179,7 +167,7 @@ class TxHistoryItem extends StatelessWidget {
         onTap: () {
           Clipboard.setData(
             ClipboardData(
-              text: value.address,
+              text: value.counterParty,
             ),
           );
           customToast(
@@ -202,7 +190,7 @@ class TxHistoryItem extends StatelessWidget {
                 ),
                 padding: const EdgeInsets.all(8),
                 child: Text(
-                  emojis[value.address.hashCode % emojis.length],
+                  emojis[value.counterParty.hashCode % emojis.length],
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontSize: 24,
                       ),
@@ -212,15 +200,15 @@ class TxHistoryItem extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Received",
-                    style: TextStyle(
+                  Text(
+                    value.balanceChange > 0 ? 'Received' : 'Sent',
+                    style: const TextStyle(
                       color: Colors.grey,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
-                    value.address.toFormattedAddress(),
+                    value.counterParty.toFormattedAddress(),
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -233,7 +221,7 @@ class TxHistoryItem extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
-                      "${value.balance / BigInt.from(10).pow(6)}",
+                      value.balanceChange.toStringAsFixed(2),
                       textAlign: TextAlign.end,
                       style: const TextStyle(
                         color: Colors.white,
@@ -241,7 +229,7 @@ class TxHistoryItem extends StatelessWidget {
                       ),
                     ),
                     Gaps.w4,
-                    Image.asset('assets/icons/USDC.png', width: 24),
+                    Image.asset('assets/icons/usdc.png', width: 24),
                   ],
                 ),
               ),
@@ -254,33 +242,18 @@ class TxHistoryItem extends StatelessWidget {
 }
 
 class AppBarSmall extends StatelessWidget {
-  const AppBarSmall({super.key, required this.userData});
+  const AppBarSmall({super.key, required this.balance});
 
-  final UserData userData;
+  final double balance;
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 18),
       child: Row(
         children: [
-          const Text(
-            '🥷',
-            style: TextStyle(
-              fontSize: 24,
-            ),
-          ),
-          Gaps.w8,
-          Text(
-            userData.name,
-            style: const TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
           const Spacer(),
           Text(
-            userData.totalBalance,
+            balance.toString(),
             style: const TextStyle(
               color: Colors.black,
               fontWeight: FontWeight.bold,
@@ -288,20 +261,17 @@ class AppBarSmall extends StatelessWidget {
             ),
           ),
           Gaps.w12,
-          Image.asset('assets/icons/USDC.png', width: 24),
+          Image.asset('assets/icons/usdc.png', width: 24),
         ],
       ),
     );
   }
 }
 
-class SendReceieveBtn extends StatelessWidget {
-  const SendReceieveBtn({
+class SendReceiveBtn extends StatelessWidget {
+  const SendReceiveBtn({
     super.key,
-    required this.name,
   });
-
-  final String name;
 
   @override
   Widget build(BuildContext context) {
@@ -315,16 +285,14 @@ class SendReceieveBtn extends StatelessWidget {
                 showModalBottomSheet(
                   context: context,
                   builder: (context) {
-                    return QrcodeCard(
-                      name: name,
-                    );
+                    return const QrcodeCard();
                   },
                 );
               },
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Image.asset(
-                  'assets/icons/receieve.png',
+                  'assets/icons/receive.png',
                   width: 32,
                 ),
               ),
@@ -363,19 +331,19 @@ class SendReceieveBtn extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const CollectTokenScreen(),
+                    builder: (context) => const ScanAddressScreen(),
                   ),
                 );
               },
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Image.asset(
-                  'assets/icons/collect.png',
+                  'assets/icons/send.png',
                   width: 32,
                 ),
               ),
             ),
-            const Text("Collect"),
+            const Text("Invest"),
           ],
         ),
       ],
@@ -386,10 +354,7 @@ class SendReceieveBtn extends StatelessWidget {
 class QrcodeCard extends StatelessWidget {
   const QrcodeCard({
     super.key,
-    required this.name,
   });
-
-  final String name;
 
   @override
   Widget build(BuildContext context) {
@@ -400,27 +365,27 @@ class QrcodeCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: PrettyQrView.data(
-              data: StealthPrivateKey.alice.toEncodeStr(name),
-              decoration: const PrettyQrDecoration(
-                image: PrettyQrDecorationImage(
-                  image: AssetImage('assets/icons/USDC.png'),
+                data: Constants.simpleAccount.hex,
+                decoration: const PrettyQrDecoration(
+                  image: PrettyQrDecorationImage(
+                    image: AssetImage('assets/icons/usdc.png'),
+                  ),
                 ),
-              ),
-            ),
+                errorCorrectLevel: QrErrorCorrectLevel.H),
           ),
           Gaps.h24,
           DefaultButton(
             onPressed: () {
               Clipboard.setData(
                 ClipboardData(
-                  text: StealthPrivateKey.alice.toEncodeStr(name),
+                  text: Constants.simpleAccount.hex,
                 ),
               );
               customToast(
                 'Copied to clipboard!',
               );
             },
-            text: "Copy Data",
+            text: "Copy Address",
             showIcon: true,
           ),
         ],
@@ -432,14 +397,11 @@ class QrcodeCard extends StatelessWidget {
 class TotalBalanceWidget extends ConsumerWidget {
   const TotalBalanceWidget({
     super.key,
-    required this.userData,
   });
-
-  final UserData userData;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userUtxoAddress = ref.watch(userUtxoAddressProvider);
+    final userBalance = ref.watch(userBalanceProvider);
 
     return Column(
       children: [
@@ -454,18 +416,18 @@ class TotalBalanceWidget extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/icons/USDC.png',
+              'assets/icons/usdc.png',
               width: 28,
             ),
             Gaps.w8,
 
             //richText with decimal
-            userUtxoAddress.when(
+            userBalance.when(
               data: (value) {
-                final totalBalance = getBalance(value);
+                final balance = value.toStringAsFixed(2);
                 return RichText(
                   text: TextSpan(
-                    text: totalBalance.split('.')[0],
+                    text: balance.split('.')[0],
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: Colors.black,
                           fontSize: 48,
@@ -473,8 +435,8 @@ class TotalBalanceWidget extends ConsumerWidget {
                         ),
                     children: [
                       TextSpan(
-                        text: totalBalance.split('.').length > 1
-                            ? '.${totalBalance.split('.')[1]}'
+                        text: balance.split('.').length > 1
+                            ? '.${balance.split('.')[1]}'
                             : '.00',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,

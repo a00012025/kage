@@ -56,7 +56,7 @@ contract DeployPaymasterScript is Script {
                 tokenOracle: IOracle(tokenOracleAddress),
                 nativeOracle: IOracle(nativeOracleAddress),
                 tokenToNativeOracle: true,
-                tokenOracleReverse: false,
+                tokenOracleReverse: true,
                 nativeOracleReverse: false,
                 priceUpdateThreshold: 1e23 // 0.1%
             });

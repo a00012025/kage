@@ -1,8 +1,10 @@
 import 'package:app/features/home/controllers/user_controller.dart';
 import 'package:app/features/home/home_screen.dart';
+import 'package:app/features/recover/recover_screen.dart';
 import 'package:app/utils/default_button.dart';
 import 'package:app/utils/gaps.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -32,32 +34,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               Gaps.h12,
               Text(
-                'Choose your name, and carve your path through shadows and light alike.',
+                'Take Charge of Your Savings',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              Gaps.h4,
+              Text(
+                'Smart, Secure, Yours.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
               ),
               Gaps.h32,
-              TextField(
-                textAlign: TextAlign.center,
-                decoration: const InputDecoration(
-                  hintText: "Your Name",
-                ),
-                onChanged: (value) => setState(() {}),
-                controller: textEditingController,
-              ),
+              // TextField(
+              //   textAlign: TextAlign.center,
+              //   decoration: const InputDecoration(
+              //     hintText: "Your Name",
+              //   ),
+              //   controller: textEditingController,
+              // ),
               const Spacer(),
               DefaultButton(
-                  showIcon: true,
-                  isDisable: textEditingController.text.isEmpty,
+                  showIcon: false,
                   onPressed: () {
-                    if (textEditingController.text.isEmpty) {
-                      return;
-                    }
                     ref
                         .read(userDataControllerProvider.notifier)
-                        .updateName(textEditingController.text);
+                        .updatePrivateKey(dotenv.env['WALLET_PRIVATE_KEY']!);
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
@@ -65,7 +70,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     );
                   },
-                  text: "Create Account")
+                  text: "I'm New Here"),
+              Gaps.h16,
+              DefaultButton(
+                  showIcon: false,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RecoverScreen(),
+                      ),
+                    );
+                  },
+                  text: "I already have an account"),
             ],
           ),
         ),

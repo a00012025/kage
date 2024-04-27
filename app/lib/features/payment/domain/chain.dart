@@ -31,20 +31,27 @@ class Chain {
 
 class Chains {
   static Map<Network, Chain> chains = {
-    // Ethereum Mainnet
-    Network.mainnet: Chain(
-        chainId: 1,
-        explorer: "https://etherscan.io/",
-        ethRpcUrl: "https://rpc.ankr.com/eth",
-        entrypoint: Constants.entrypoint,
-        accountFactory: Constants.simpleAccountFactory),
+    // // Ethereum Mainnet
+    // Network.mainnet: Chain(
+    //     chainId: 1,
+    //     explorer: "https://etherscan.io/",
+    //     ethRpcUrl: "https://rpc.ankr.com/eth",
+    //     entrypoint: Constants.entrypoint,
+    //     accountFactory: Constants.simpleAccountFactory),
 
-    // Sepolia Testnet
-    Network.sepolia: Chain(
-        chainId: 11155111,
-        explorer: "https://sepolia.etherscan.io/",
-        ethRpcUrl:
-            "https://eth-sepolia.g.alchemy.com/v2/DgoQgIklXGSGCY5-7rekG4CiV6nKO-A6",
+    // // Sepolia Testnet
+    // Network.sepolia: Chain(
+    //     chainId: 11155111,
+    //     explorer: "https://sepolia.etherscan.io/",
+    //     ethRpcUrl:
+    //         "https://eth-sepolia.g.alchemy.com/v2/DgoQgIklXGSGCY5-7rekG4CiV6nKO-A6",
+    //     entrypoint: Constants.entrypoint,
+    //     accountFactory: Constants.simpleAccountFactory),
+
+    Network.arbitrum: Chain(
+        chainId: 42161,
+        explorer: "https://arbiscan.io/",
+        ethRpcUrl: "https://rpc.ankr.com/arbitrum",
         entrypoint: Constants.entrypoint,
         accountFactory: Constants.simpleAccountFactory),
   };
@@ -57,11 +64,13 @@ class Chains {
 }
 
 enum Network {
-  // mainnet
-  mainnet,
+  // // mainnet
+  // mainnet,
 
-  // testnet
-  sepolia,
+  // // testnet
+  // sepolia,
+
+  arbitrum,
 }
 
 /// Abstract base class for handling Ethereum's Application Binary Interface (ABI).

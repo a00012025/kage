@@ -1,12 +1,10 @@
-import 'dart:convert';
 import 'dart:io';
-
 import 'package:app/features/send_token/send_token_screen.dart';
-import 'package:app/features/stealth/stealth_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:web3dart/web3dart.dart';
 
 class ScanAddressScreen extends ConsumerStatefulWidget {
   const ScanAddressScreen({super.key});
@@ -46,25 +44,15 @@ class _SendTokenChooseAddressState extends ConsumerState<ScanAddressScreen> {
         stop = true;
         result = scanData;
         try {
-          final data = jsonDecode(scanData.code.toString());
-          debugPrint('=======data : $data=========');
-          final service = StealthService();
-          final vPubPoint = service.getECPoint(data['pv'] as String);
-          final kPubPoint = service.getECPoint(data['pk'] as String);
-          final name = data['name'] as String;
-          final result = service.getOthersAddress(vPubPoint, kPubPoint);
-
+          final address = EthereumAddress.fromHex(scanData.code.toString());
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => SendTokenScreen(
-                name,
-                result,
-              ),
+              builder: (context) => SendTokenScreen(address),
             ),
           );
-
-          debugPrint('=======data : $data=========');
+          debugPrint(
+              '=======qr code data : ${scanData.code.toString()}=========');
         } catch (e) {
           print(e);
         }

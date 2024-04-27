@@ -134,9 +134,10 @@ class UserOperation implements UserOperationBase {
         callData: callData,
         callGasLimit: callGasLimit ?? BigInt.from(150000),
         verificationGasLimit: verificationGasLimit ?? BigInt.from(500000),
-        preVerificationGas: preVerificationGas ?? BigInt.from(500000),
-        maxFeePerGas: maxFeePerGas ?? BigInt.from(1000000000),
-        maxPriorityFeePerGas: maxPriorityFeePerGas ?? BigInt.from(1000000000),
+        preVerificationGas: preVerificationGas ?? BigInt.from(50000),
+        maxFeePerGas: maxFeePerGas ?? BigInt.from(10000000), // 0.01 gwei
+        maxPriorityFeePerGas:
+            maxPriorityFeePerGas ?? BigInt.from(10000000), // 0.01 gwei
         signature: "0x",
         paymasterAndData: paymasterAndData ?? '0x',
       );
