@@ -253,7 +253,7 @@ class AppBarSmall extends StatelessWidget {
         children: [
           const Spacer(),
           Text(
-            balance.toString(),
+            balance.toStringAsFixed(2),
             style: const TextStyle(
               color: Colors.black,
               fontWeight: FontWeight.bold,

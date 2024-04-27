@@ -1,4 +1,5 @@
 import 'package:app/features/home/controllers/user_balance_controller.dart';
+import 'package:app/features/home/controllers/user_txs_controller.dart';
 import 'package:app/features/payment/application/payment_service.dart';
 import 'package:app/utils/app_tap.dart';
 import 'package:app/utils/default_button.dart';
@@ -136,6 +137,7 @@ class _SendTokenScreenState extends ConsumerState<SendTokenScreen> {
                         );
                       });
                   ref.read(userBalanceProvider.notifier).updateState();
+                  ref.read(userTxsProvider.notifier).updateState();
                   Navigator.pop(context);
                   Navigator.pop(context);
                 },

@@ -5,10 +5,8 @@ import 'package:app/features/common/constants.dart';
 import 'package:app/features/common/contract/contract_util.dart';
 import 'package:app/features/common/contract/entry_point_contract.dart';
 import 'package:app/features/common/contract/simple_account_factory_contract.dart';
-import 'package:app/features/payment/application/payment_exception.dart';
 import 'package:app/features/payment/domain/chain.dart';
 import 'package:app/features/payment/domain/user_operation.dart';
-import 'package:app/features/payment/domain/utxo_address.dart';
 import 'package:eth_sig_util/eth_sig_util.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -25,41 +23,6 @@ class PaymentService {
 
   static Web3Client getWeb3Client() {
     return Web3Client('https://rpc.ankr.com/arbitrum', http.Client());
-  }
-
-  Future<List<UtxoAddress>> getAddressesToSend({
-    required List<UtxoAddress> addresses,
-    required BigInt amountToSend,
-  }) async {
-    var sortedAddresses = List<UtxoAddress>.from(addresses)
-      ..sort((a, b) => b.balance.compareTo(a.balance));
-    BigInt needFound = amountToSend;
-    BigInt tempFound = BigInt.zero;
-
-    List<UtxoAddress> selectedAddresses = [];
-    for (var utxo in sortedAddresses) {
-      tempFound = needFound;
-      needFound -= utxo.balance;
-      if (needFound <= BigInt.zero) {
-        selectedAddresses.add(utxo.copyWith(
-          balance: tempFound,
-        ));
-        break;
-      } else {
-        selectedAddresses.add(utxo);
-      }
-    }
-
-    if (needFound > BigInt.zero) {
-      final exception = InsufficientBalanceException(
-        availableBalance: needFound,
-        requiredBalance: amountToSend,
-      );
-      debugPrint(exception.toString());
-      throw exception;
-    }
-
-    return selectedAddresses;
   }
 
   Future<UserOperation> signUserOperations(
