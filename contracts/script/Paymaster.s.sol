@@ -11,12 +11,14 @@ contract DeployPaymasterScript is Script {
 
     function run() public {
         vm.startBroadcast(vm.envUint("DEPLOYER_PRIVATE_KEY"));
-        address deployerAddress = vm.envAddress("DEPLOYER_ADDRESS");
+        // address deployerAddress = address(
+        //     0x000000988E5db213D5773fed2276c42399B7636A
+        // );
 
-        require(
-            deployerAddress.balance >= 1e15 + 1e14, // 0.0011 ETH
-            "Deployer balance not enough"
-        );
+        // require(
+        //     deployerAddress.balance >= 1e15 + 1e14, // 0.0011 ETH
+        //     "Deployer balance not enough"
+        // );
 
         // ETH/USD on arbitrum
         address tokenOracleAddress = address(
@@ -68,7 +70,7 @@ contract DeployPaymasterScript is Script {
             tokenPaymasterConfig,
             oracleHelperConfig,
             uniswapConfig,
-            deployerAddress
+            address(0x000000988E5db213D5773fed2276c42399B7636A) // deployer
         );
         console.log("Deployed TokenPaymaster at:", address(paymaster));
         paymaster.updateCachedPrice(false);
