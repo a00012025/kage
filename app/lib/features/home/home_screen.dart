@@ -275,7 +275,7 @@ class _InvestCardState extends ConsumerState<InvestCard> {
                 style: TextStyle(color: Colors.black),
               ),
               Text(
-                '${maxAmount.toStringAsFixed(2)} USDC',
+                '${(max(maxAmount - 0.005, 0)).toStringAsFixed(2)} USDC',
                 style: const TextStyle(color: Colors.black),
               ),
             ],

@@ -129,7 +129,7 @@ class _SendTokenScreenState extends ConsumerState<SendTokenScreen> {
                     // max amount: maxAmount format with 2 decimals
                     Gaps.h4,
                     Text(
-                      "Max: ${maxAmount.toStringAsFixed(2)} USDC",
+                      "Max: ${(max(maxAmount - 0.005, 0)).toStringAsFixed(2)} USDC",
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 14,
