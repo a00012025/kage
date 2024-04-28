@@ -26,7 +26,7 @@ class UserOperation implements UserOperationBase {
   final EthereumAddress sender;
 
   @override
-  final BigInt nonce;
+  BigInt nonce;
 
   @override
   final String initCode;
@@ -58,8 +58,6 @@ class UserOperation implements UserOperationBase {
   final dummySig =
       "0xfffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c";
 
-  Uint8List _hash;
-
   UserOperation({
     required this.sender,
     required this.nonce,
@@ -72,29 +70,7 @@ class UserOperation implements UserOperationBase {
     required this.maxPriorityFeePerGas,
     required this.signature,
     required this.paymasterAndData,
-  }) : _hash = keccak256(abi.encode([
-          'address',
-          'uint256',
-          'bytes32',
-          'bytes32',
-          'bytes32',
-          'uint256',
-          'bytes32',
-          'bytes32',
-        ], [
-          sender,
-          nonce,
-          keccak256(hexToBytes(initCode)),
-          keccak256(hexToBytes(callData)),
-          combineBigIntToByte32(verificationGasLimit, callGasLimit),
-          // callGasLimit,
-          // verificationGasLimit,
-          preVerificationGas,
-          combineBigIntToByte32(maxFeePerGas, maxPriorityFeePerGas),
-          // maxFeePerGas,
-          // maxPriorityFeePerGas,
-          keccak256(hexToBytes(paymasterAndData)),
-        ]));
+  });
 
   factory UserOperation.fromJson(String source) =>
       UserOperation.fromMap(json.decode(source) as Map<String, dynamic>);
@@ -143,9 +119,33 @@ class UserOperation implements UserOperationBase {
       );
 
   @override
-  Uint8List hash(Chain chain) => keccak256(abi.encode(
-      ['bytes32', 'address', 'uint256'],
-      [_hash, chain.entrypoint, BigInt.from(chain.chainId)]));
+  Uint8List hash(Chain chain) => keccak256(abi.encode([
+        'bytes32',
+        'address',
+        'uint256'
+      ], [
+        keccak256(abi.encode([
+          'address',
+          'uint256',
+          'bytes32',
+          'bytes32',
+          'bytes32',
+          'uint256',
+          'bytes32',
+          'bytes32',
+        ], [
+          sender,
+          nonce,
+          keccak256(hexToBytes(initCode)),
+          keccak256(hexToBytes(callData)),
+          combineBigIntToByte32(verificationGasLimit, callGasLimit),
+          preVerificationGas,
+          combineBigIntToByte32(maxFeePerGas, maxPriorityFeePerGas),
+          keccak256(hexToBytes(paymasterAndData)),
+        ])),
+        chain.entrypoint,
+        BigInt.from(chain.chainId)
+      ]));
 
   @override
   String toJson() => json.encode(toMap());

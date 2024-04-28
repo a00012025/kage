@@ -19,12 +19,15 @@ class TxHistoryItem extends StatelessWidget {
     '👨‍🚀',
     '👨‍🚒',
     '👨‍🎨',
+    '👨‍🌾',
     '👨‍🎤',
     '👨‍🏫',
   ];
 
   @override
   Widget build(BuildContext context) {
+    final isInvest = value.counterParty.toLowerCase() ==
+        '0x724dc807b04555b71ed48a6896b6f41593b8c637';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: AppTap(
@@ -65,7 +68,11 @@ class TxHistoryItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    value.balanceChange > 0 ? 'Received' : 'Sent',
+                    isInvest
+                        ? 'Invest'
+                        : value.balanceChange > 0
+                            ? 'Received'
+                            : 'Sent',
                     style: const TextStyle(
                       color: Colors.grey,
                       fontWeight: FontWeight.bold,
@@ -85,7 +92,8 @@ class TxHistoryItem extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
-                      value.balanceChange.toStringAsFixed(2),
+                      (isInvest ? -value.balanceChange : value.balanceChange)
+                          .toStringAsFixed(2),
                       textAlign: TextAlign.end,
                       style: const TextStyle(
                         color: Colors.white,

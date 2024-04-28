@@ -426,7 +426,14 @@ class QrcodeCard extends StatelessWidget {
                 ),
                 errorCorrectLevel: QrErrorCorrectLevel.H),
           ),
-          Gaps.h24,
+          const Text(
+            'Only supports Arbitrum USDC now',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          Gaps.h8,
           DefaultButton(
             onPressed: () {
               Clipboard.setData(

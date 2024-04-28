@@ -83,21 +83,27 @@ class PaymentService {
 
   Future<String> sendUserOperations(List<UserOperation> ops) async {
     final chain = Chains.getChain(Network.arbitrum);
-    for (var op in ops) {
+    for (var i = 0; i < ops.length; i++) {
+      if (i > 0) {
+        ops[i].nonce = ops[i - 1].nonce + BigInt.one;
+      }
       final signature = EthSigUtil.signPersonalMessage(
         privateKey: dotenv.env['WALLET_PRIVATE_KEY']!,
-        message: op.hash(chain),
+        message: ops[i].hash(chain),
       );
-      op.signature = signature;
+      ops[i].signature = signature;
     }
     final client = getWeb3Client();
     final relayerPrivateKey = dotenv.env['RELAYER_PRIVATE_KEY']!;
     final privateKey = EthPrivateKey.fromHex(relayerPrivateKey);
-    final maxGas = 150000 * ops.length +
+    final maxGas = 200000 * ops.length +
         ops.fold<int>(
             0,
-            (previousValue, element) =>
-                previousValue + element.callGasLimit.toInt());
+            (previousValue, e) =>
+                previousValue +
+                e.callGasLimit.toInt() +
+                e.preVerificationGas.toInt() +
+                e.verificationGasLimit.toInt());
     final transaction = Transaction.callContract(
       contract: entryPointContract,
       function: entryPointContract.handleOps,
@@ -118,6 +124,7 @@ class PaymentService {
     final rawAmount = BigInt.from(amount);
     final client = getWeb3Client();
     final usdcContract = Erc20Contract.create(Constants.usdc);
+    final smartContractAccount = Constants.simpleAccount;
     final aaveContract = AaveContract.create();
     final List<UserOperation> ops = [];
 
@@ -125,15 +132,19 @@ class PaymentService {
     final allowance = await client.call(
       contract: usdcContract,
       function: usdcContract.allowance,
-      params: [Constants.simpleAccount, Constants.aave],
+      params: [smartContractAccount, Constants.aave],
     );
     if ((allowance.first as BigInt) < rawAmount) {
       final approveCallData = usdcContract.function('approve').encodeCall([
         Constants.aave,
         rawAmount,
       ]);
-      final approveOp = await getDefaultUserOperation(Constants.simpleAccount);
-      approveOp.callData = hexlify(approveCallData);
+      final callData = encodeExecuteFunctionCall(
+        address: smartContractAccount,
+        params: [Constants.usdc, BigInt.zero, approveCallData],
+      );
+      final approveOp = await getDefaultUserOperation(smartContractAccount);
+      approveOp.callData = hexlify(callData);
       approveOp.callGasLimit = BigInt.from(50000);
       ops.add(approveOp);
     }
@@ -142,11 +153,15 @@ class PaymentService {
     final investCallData = aaveContract.function('supply').encodeCall([
       Constants.usdc,
       rawAmount,
-      Constants.simpleAccount,
+      smartContractAccount,
       BigInt.zero,
     ]);
-    final investOp = await getDefaultUserOperation(Constants.simpleAccount);
-    investOp.callData = hexlify(investCallData);
+    final callData = encodeExecuteFunctionCall(
+      address: smartContractAccount,
+      params: [Constants.aave, BigInt.zero, investCallData],
+    );
+    final investOp = await getDefaultUserOperation(smartContractAccount);
+    investOp.callData = hexlify(callData);
     investOp.callGasLimit = BigInt.from(500000);
     ops.add(investOp);
 
