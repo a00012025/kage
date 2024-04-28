@@ -51,7 +51,7 @@ class Chains {
     Network.arbitrum: Chain(
         chainId: 42161,
         explorer: "https://arbiscan.io/",
-        ethRpcUrl: "https://rpc.ankr.com/arbitrum",
+        ethRpcUrl: Constants.rpcUrl,
         entrypoint: Constants.entrypoint,
         accountFactory: Constants.simpleAccountFactory),
   };

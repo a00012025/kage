@@ -23,7 +23,7 @@ class AaveData extends _$AaveData {
   }
 }
 
-var web3Client = Web3Client('https://rpc.ankr.com/arbitrum', http.Client());
+var web3Client = Web3Client(Constants.rpcUrl, http.Client());
 Future<double> getApy() async {
   final aaveUiContract = AaveUiPoolDataContract.create();
   final result = await web3Client.call(

@@ -1,13 +1,14 @@
+import 'dart:math';
+
+import 'package:app/features/common/sending_tx_card.dart';
 import 'package:app/features/home/controllers/user_balance_controller.dart';
 import 'package:app/features/home/controllers/user_txs_controller.dart';
 import 'package:app/features/payment/application/payment_service.dart';
-import 'package:app/utils/app_tap.dart';
 import 'package:app/utils/default_button.dart';
 import 'package:app/utils/gaps.dart';
 import 'package:app/utils/string_utils.dart';
 import 'package:app/utils/toast.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web3dart/web3dart.dart';
 
@@ -31,6 +32,10 @@ class _SendTokenScreenState extends ConsumerState<SendTokenScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userBalance = ref.watch(userBalanceProvider);
+    final remaining = userBalance.value?.total ?? 0;
+    final maxAmount = max(remaining - 0.5, 0);
+
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -121,6 +126,16 @@ class _SendTokenScreenState extends ConsumerState<SendTokenScreen> {
                         color: Colors.grey,
                       ),
                     ),
+                    // max amount: maxAmount format with 2 decimals
+                    Gaps.h4,
+                    Text(
+                      "Max: ${maxAmount.toStringAsFixed(2)} USDC",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -128,10 +143,19 @@ class _SendTokenScreenState extends ConsumerState<SendTokenScreen> {
                 isDisable: textEditingController.text.isEmpty,
                 showIcon: true,
                 onPressed: () async {
+                  if (textEditingController.text.isEmpty) {
+                    return;
+                  }
+                  final amountToSend = double.parse(textEditingController.text);
+                  if (amountToSend > maxAmount) {
+                    customToast('Insufficient balance');
+                    return;
+                  }
+
                   await showDialog(
                       context: context,
                       builder: (_) {
-                        return SuccessCard(
+                        return SendingTokenCard(
                           receiver: widget.receiver,
                           amount: textEditingController.text,
                         );
@@ -151,8 +175,8 @@ class _SendTokenScreenState extends ConsumerState<SendTokenScreen> {
   }
 }
 
-class SuccessCard extends StatefulWidget {
-  const SuccessCard({
+class SendingTokenCard extends StatefulWidget {
+  const SendingTokenCard({
     super.key,
     required this.receiver,
     required this.amount,
@@ -162,10 +186,10 @@ class SuccessCard extends StatefulWidget {
   final String amount;
 
   @override
-  State<SuccessCard> createState() => _SuccessCardState();
+  State<SendingTokenCard> createState() => _SendingTokenCardState();
 }
 
-class _SuccessCardState extends State<SuccessCard> {
+class _SendingTokenCardState extends State<SendingTokenCard> {
   bool isSuccess = false;
   String hash = '';
   @override
@@ -186,49 +210,9 @@ class _SuccessCardState extends State<SuccessCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: AppTap(
-        onTap: () {
-          Clipboard.setData(ClipboardData(text: hash));
-          customToast('Copied to clipboard!');
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Card(
-            color: Colors.white,
-            surfaceTintColor: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  isSuccess
-                      ? const Icon(
-                          Icons.check_circle,
-                          color: Colors.green,
-                          size: 48,
-                        )
-                      : Image.asset(
-                          'assets/icons/ninja_run.gif',
-                          width: 200,
-                        ),
-                  Gaps.h16,
-                  Text(
-                    isSuccess
-                        ? "🥷：Mission Completed! ${hash.toFormattedAddress()}"
-                        : "🥷：We're working on it.",
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+    return SendingTxCard(
+      isSuccess: isSuccess,
+      hash: hash,
     );
   }
 }

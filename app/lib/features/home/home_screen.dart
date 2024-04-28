@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:app/features/common/constants.dart';
+import 'package:app/features/common/sending_tx_card.dart';
 import 'package:app/features/home/controllers/user_balance_controller.dart';
 import 'package:app/features/home/controllers/user_txs_controller.dart';
 import 'package:app/features/home/widgets/app_bar.dart';
@@ -8,10 +9,8 @@ import 'package:app/features/home/widgets/total_balance.dart';
 import 'package:app/features/home/widgets/tx_history_item.dart';
 import 'package:app/features/payment/application/payment_service.dart';
 import 'package:app/features/send_token/scan_address_screen.dart';
-import 'package:app/utils/app_tap.dart';
 import 'package:app/utils/default_button.dart';
 import 'package:app/utils/gaps.dart';
-import 'package:app/utils/string_utils.dart';
 import 'package:app/utils/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -63,7 +62,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final userTxs = ref.watch(userTxsProvider);
     final userBalance = ref.watch(userBalanceProvider);
-    debugPrint('======={userTxs} : $userTxs=========');
+    // debugPrint('======={userTxs} : $userTxs=========');
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -103,6 +102,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 userTxs.when(
                   data: (value) {
+                    final filteredTxs = value
+                        .where((tx) =>
+                            // filter out withdraw tx
+                            !(tx.counterParty.toLowerCase() ==
+                                    '0x724dc807b04555b71ed48a6896b6f41593b8c637' &&
+                                tx.balanceChange > 0))
+                        .toList();
                     return SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (BuildContext context, int index) {
@@ -111,11 +117,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             duration: const Duration(milliseconds: 375),
                             child: SlideAnimation(
                               verticalOffset: 150.0,
-                              child: TxHistoryItem(value: value[index]),
+                              child: TxHistoryItem(value: filteredTxs[index]),
                             ),
                           );
                         },
-                        childCount: value.length,
+                        childCount: filteredTxs.length,
                       ),
                     );
                   },
@@ -257,7 +263,8 @@ class _InvestCardState extends ConsumerState<InvestCard> {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(
+                signed: false, decimal: true),
           ),
           Gaps.h4,
           Row(
@@ -341,65 +348,6 @@ class _InvestingCardState extends State<InvestingCard> {
     return SendingTxCard(
       isSuccess: isSuccess,
       hash: hash,
-    );
-  }
-}
-
-class SendingTxCard extends StatelessWidget {
-  final bool isSuccess;
-  final String hash;
-
-  const SendingTxCard({
-    super.key,
-    required this.isSuccess,
-    required this.hash,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: AppTap(
-        onTap: () {
-          Clipboard.setData(ClipboardData(text: hash));
-          customToast('Copied to clipboard!');
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Card(
-            color: Colors.white,
-            surfaceTintColor: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  isSuccess
-                      ? const Icon(
-                          Icons.check_circle,
-                          color: Colors.green,
-                          size: 48,
-                        )
-                      : Image.asset(
-                          'assets/icons/ninja_run.gif',
-                          width: 200,
-                        ),
-                  Gaps.h16,
-                  Text(
-                    isSuccess
-                        ? "🥷：Mission Completed! ${hash.toFormattedAddress()}"
-                        : "🥷：We're working on it.",
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

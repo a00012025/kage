@@ -83,19 +83,16 @@ class _SendTokenChooseAddressState extends ConsumerState<ScanAddressScreen> {
               onQRViewCreated: _onQRViewCreated,
             ),
           ),
-          Expanded(
+          const Expanded(
             flex: 1,
             child: Center(
-              child: (result != null)
-                  ? Text(
-                      'Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}')
-                  : const Text(
-                      '🥷 Scan a QR Code',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+              child: Text(
+                '🥷 Scan a QR Code',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           )
         ],

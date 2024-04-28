@@ -21,7 +21,7 @@ class PaymentService {
         simpleAccountFactoryContract = SimpleAccountFactoryContract.create();
 
   static Web3Client getWeb3Client() {
-    return Web3Client('https://rpc.ankr.com/arbitrum', http.Client());
+    return Web3Client(Constants.rpcUrl, http.Client());
   }
 
   Future<UserOperation> getDefaultUserOperation(
@@ -56,12 +56,39 @@ class PaymentService {
     );
   }
 
-  Future<UserOperation> getSendUsdcUserOperation(
-      String amountToSend, EthereumAddress toAddress) async {
-    final amount = (double.tryParse(amountToSend) ?? 0.0) * 1e6;
+  Future<String> sendUsdc(String sendAmount, EthereumAddress toAddress) async {
+    final List<UserOperation> ops = [];
+    final amount = (double.tryParse(sendAmount) ?? 0.0) * 1e6;
     final rawAmount = BigInt.from(amount);
     final smartContractAccount = Constants.simpleAccount;
-    UserOperation op = await getDefaultUserOperation(smartContractAccount);
+    final usdcContract = Erc20Contract.create(Constants.usdc);
+    final client = getWeb3Client();
+    final usdcBalance = (await client.call(
+      contract: usdcContract,
+      function: usdcContract.balanceOf,
+      params: [smartContractAccount],
+    ))
+        .first as BigInt;
+    if (usdcBalance - rawAmount < BigInt.from(500000)) {
+      // need to withdraw first if usdc balance will be less than 0.5
+      final aaveContract = AaveContract.create();
+      final toWithdraw = rawAmount - usdcBalance + BigInt.from(500000);
+      final withdrawCallData = aaveContract.function('withdraw').encodeCall([
+        Constants.usdc,
+        toWithdraw,
+        smartContractAccount,
+      ]);
+      final callData = encodeExecuteFunctionCall(
+        address: smartContractAccount,
+        params: [Constants.aave, BigInt.zero, withdrawCallData],
+      );
+      final withdrawOp = await getDefaultUserOperation(smartContractAccount);
+      withdrawOp.callData = hexlify(callData);
+      withdrawOp.callGasLimit = BigInt.from(300000);
+      ops.add(withdrawOp);
+    }
+
+    UserOperation sendOp = await getDefaultUserOperation(smartContractAccount);
     final sendCallData = encodeErc20TransferFunctionCall(
       contract: Constants.usdc,
       to: toAddress,
@@ -71,14 +98,10 @@ class PaymentService {
       address: smartContractAccount,
       params: [Constants.usdc, BigInt.zero, sendCallData],
     );
-    op.callData = hexlify(callData);
-    op.callGasLimit = BigInt.from(50000);
-    return op;
-  }
-
-  Future<String> sendUsdc(String sendAmount, EthereumAddress toAddress) async {
-    final op = await getSendUsdcUserOperation(sendAmount, toAddress);
-    return sendUserOperations([op]);
+    sendOp.callData = hexlify(callData);
+    sendOp.callGasLimit = BigInt.from(50000);
+    ops.add(sendOp);
+    return sendUserOperations(ops);
   }
 
   Future<String> sendUserOperations(List<UserOperation> ops) async {

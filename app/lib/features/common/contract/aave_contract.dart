@@ -15,6 +15,7 @@ class AaveContract extends DeployedContract {
   // ContractEvent get approvalEvent => event('Approval');
   // ContractFunction get approve => function('approve');
   ContractFunction get supply => function('supply');
+  ContractFunction get withdraw => function('withdraw');
 }
 
 final aaveAbi = [
@@ -1355,15 +1356,15 @@ final aaveAbi = [
     "stateMutability": "nonpayable",
     "type": "function"
   },
-  {
-    "inputs": [
-      {"internalType": "bytes32", "name": "args", "type": "bytes32"}
-    ],
-    "name": "withdraw",
-    "outputs": [
-      {"internalType": "uint256", "name": "", "type": "uint256"}
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
+  // {
+  //   "inputs": [
+  //     {"internalType": "bytes32", "name": "args", "type": "bytes32"}
+  //   ],
+  //   "name": "withdraw",
+  //   "outputs": [
+  //     {"internalType": "uint256", "name": "", "type": "uint256"}
+  //   ],
+  //   "stateMutability": "nonpayable",
+  //   "type": "function"
+  // }
 ];

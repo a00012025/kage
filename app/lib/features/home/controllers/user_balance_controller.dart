@@ -24,7 +24,7 @@ class UserBalance extends _$UserBalance {
   }
 }
 
-var web3Client = Web3Client('https://rpc.ankr.com/arbitrum', http.Client());
+var web3Client = Web3Client(Constants.rpcUrl, http.Client());
 Future<BalanceData> getBalance() async {
   final address = Constants.simpleAccount;
   final usdcContract = Erc20Contract.create(Constants.usdc);

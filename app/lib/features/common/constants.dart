@@ -1,6 +1,9 @@
 import 'package:web3dart/web3dart.dart';
 
 class Constants {
+  static String rpcUrl =
+      'https://arbitrum-one.rpc.grove.city/v1/62b3314e123e6f00397f19ca';
+
   static EthereumAddress entrypoint = EthereumAddress.fromHex(
     "0x0000000071727De22E5E9d8BAf0edAc6f37da032",
   );
