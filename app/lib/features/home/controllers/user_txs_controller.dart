@@ -57,7 +57,7 @@ Future<List<TxData>> getUsdcTxs() async {
 Future<List<TxLog>> fetchUsdcTxLogs(EthereumAddress address, bool from) async {
   const String apiUrl = 'https://api.arbiscan.io/api';
   final String apiKey = dotenv.env['ARBISCAN_API_KEY']!;
-  final erc20 = Erc20Contract.create();
+  final erc20 = Erc20Contract.create(Constants.usdc);
   final transferTopic = bytesToHex(erc20.transferEvent.signature,
       padToEvenLength: true, include0x: true);
   final addressTopic = '0x${address.hex.substring(2).padLeft(64, '0')}';

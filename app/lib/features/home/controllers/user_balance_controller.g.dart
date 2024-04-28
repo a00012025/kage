@@ -6,11 +6,12 @@ part of 'user_balance_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$userBalanceHash() => r'd69baa405296820743d60f89f1f299c5bf28cc52';
+String _$userBalanceHash() => r'4bbe2c009a59bbdef3c11f41d76f676d19b9d38b';
 
 /// See also [UserBalance].
 @ProviderFor(UserBalance)
-final userBalanceProvider = AsyncNotifierProvider<UserBalance, double>.internal(
+final userBalanceProvider =
+    AsyncNotifierProvider<UserBalance, BalanceData>.internal(
   UserBalance.new,
   name: r'userBalanceProvider',
   debugGetCreateSourceHash:
@@ -19,6 +20,6 @@ final userBalanceProvider = AsyncNotifierProvider<UserBalance, double>.internal(
   allTransitiveDependencies: null,
 );
 
-typedef _$UserBalance = AsyncNotifier<double>;
+typedef _$UserBalance = AsyncNotifier<BalanceData>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

@@ -1,9 +1,12 @@
+import 'dart:math';
+
 import 'package:app/features/common/constants.dart';
 import 'package:app/features/home/controllers/user_balance_controller.dart';
-import 'package:app/features/home/controllers/user_controller.dart';
 import 'package:app/features/home/controllers/user_txs_controller.dart';
-import 'package:app/features/home/domain/jumping_dot.dart';
-import 'package:app/features/home/domain/tx_data.dart';
+import 'package:app/features/home/widgets/app_bar.dart';
+import 'package:app/features/home/widgets/total_balance.dart';
+import 'package:app/features/home/widgets/tx_history_item.dart';
+import 'package:app/features/payment/application/payment_service.dart';
 import 'package:app/features/send_token/scan_address_screen.dart';
 import 'package:app/utils/app_tap.dart';
 import 'package:app/utils/default_button.dart';
@@ -58,10 +61,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userData = ref.watch(userDataControllerProvider);
     final userTxs = ref.watch(userTxsProvider);
     final userBalance = ref.watch(userBalanceProvider);
-    debugPrint('======={userData} : $userData=========');
     debugPrint('======={userTxs} : $userTxs=========');
     return Scaffold(
       backgroundColor: Colors.white,
@@ -85,7 +86,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     title: Opacity(
                       opacity: _opacity,
                       child: userBalance.when(
-                          data: (value) => AppBarSmall(balance: value),
+                          data: (value) => AppBarSmall(balance: value.total),
                           error: (error, _) => const AppBarSmall(balance: 0),
                           loading: () => const AppBarSmall(balance: 0)),
                     ),
@@ -110,9 +111,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             duration: const Duration(milliseconds: 375),
                             child: SlideAnimation(
                               verticalOffset: 150.0,
-                              child: TxHistoryItem(
-                                value: value[index],
-                              ),
+                              child: TxHistoryItem(value: value[index]),
                             ),
                           );
                         },
@@ -137,132 +136,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class TxHistoryItem extends StatelessWidget {
-  TxHistoryItem({
-    super.key,
-    required this.value,
-  });
-
-  final TxData value;
-
-  final emojis = [
-    '🥷',
-    '👨‍🚀',
-    '👨‍🚒',
-    '👨‍🎨',
-    '👨‍🎤',
-    '👨‍🏫',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-      child: AppTap(
-        onTap: () {
-          Clipboard.setData(
-            ClipboardData(
-              text: value.counterParty,
-            ),
-          );
-          customToast(
-            'Copied to clipboard!',
-          );
-        },
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  emojis[value.counterParty.hashCode % emojis.length],
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontSize: 24,
-                      ),
-                ),
-              ),
-              Gaps.w16,
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    value.balanceChange > 0 ? 'Received' : 'Sent',
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    value.counterParty.toFormattedAddress(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text(
-                      value.balanceChange.toStringAsFixed(2),
-                      textAlign: TextAlign.end,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Gaps.w4,
-                    Image.asset('assets/icons/usdc.png', width: 24),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class AppBarSmall extends StatelessWidget {
-  const AppBarSmall({super.key, required this.balance});
-
-  final double balance;
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18),
-      child: Row(
-        children: [
-          const Spacer(),
-          Text(
-            balance.toStringAsFixed(2),
-            style: const TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-          Gaps.w12,
-          Image.asset('assets/icons/usdc.png', width: 24),
-        ],
       ),
     );
   }
@@ -328,17 +201,17 @@ class SendReceiveBtn extends StatelessWidget {
           children: [
             DefaultButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ScanAddressScreen(),
-                  ),
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) {
+                    return const InvestCard();
+                  },
                 );
               },
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Image.asset(
-                  'assets/icons/send.png',
+                  'assets/icons/earn.png',
                   width: 32,
                 ),
               ),
@@ -347,6 +220,186 @@ class SendReceiveBtn extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class InvestCard extends ConsumerStatefulWidget {
+  const InvestCard({super.key});
+
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() => _InvestCardState();
+}
+
+class _InvestCardState extends ConsumerState<InvestCard> {
+  // text input
+  final TextEditingController _amountController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    final userBalance = ref.watch(userBalanceProvider);
+    final usdcBalance = userBalance.value?.usdc ?? 0;
+    final maxAmount = max(usdcBalance - 0.5, 0);
+
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        children: [
+          TextField(
+            controller: _amountController,
+            onChanged: (value) {
+              setState(() {});
+            },
+            decoration: InputDecoration(
+              labelText: 'Amount',
+              hintText: 'Enter amount to invest',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            keyboardType: TextInputType.number,
+          ),
+          Gaps.h4,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              const Text(
+                'Max: ',
+                style: TextStyle(color: Colors.black),
+              ),
+              Text(
+                '${maxAmount.toStringAsFixed(2)} USDC',
+                style: const TextStyle(color: Colors.black),
+              ),
+            ],
+          ),
+          Gaps.h24,
+          DefaultButton(
+            showIcon: true,
+            onPressed: () async {
+              final amount = double.tryParse(_amountController.text);
+              if (amount == null) {
+                customToast('Invalid amount');
+                return;
+              }
+              if (amount > maxAmount) {
+                customToast('Insufficient balance');
+                return;
+              }
+              await showDialog(
+                  context: context,
+                  builder: (_) {
+                    return InvestingCard(
+                      amount: _amountController.text,
+                    );
+                  });
+              ref.read(userBalanceProvider.notifier).updateState();
+              ref.read(userTxsProvider.notifier).updateState();
+              Navigator.pop(context);
+            },
+            isDisable: _amountController.text == "",
+            text: "Invest",
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class InvestingCard extends StatefulWidget {
+  const InvestingCard({
+    super.key,
+    required this.amount,
+  });
+
+  final String amount;
+
+  @override
+  State<InvestingCard> createState() => _InvestingCardState();
+}
+
+class _InvestingCardState extends State<InvestingCard> {
+  bool isSuccess = false;
+  String hash = '';
+  @override
+  void initState() {
+    asyncInit();
+    super.initState();
+  }
+
+  void asyncInit() async {
+    final service = PaymentService();
+    hash = await service.sendInvestUserOperation(widget.amount);
+    setState(() {
+      isSuccess = true;
+    });
+    debugPrint('=======hash : $hash=========');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SendingTxCard(
+      isSuccess: isSuccess,
+      hash: hash,
+    );
+  }
+}
+
+class SendingTxCard extends StatelessWidget {
+  final bool isSuccess;
+  final String hash;
+
+  const SendingTxCard({
+    super.key,
+    required this.isSuccess,
+    required this.hash,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: AppTap(
+        onTap: () {
+          Clipboard.setData(ClipboardData(text: hash));
+          customToast('Copied to clipboard!');
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Card(
+            color: Colors.white,
+            surfaceTintColor: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  isSuccess
+                      ? const Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                          size: 48,
+                        )
+                      : Image.asset(
+                          'assets/icons/ninja_run.gif',
+                          width: 200,
+                        ),
+                  Gaps.h16,
+                  Text(
+                    isSuccess
+                        ? "🥷：Mission Completed! ${hash.toFormattedAddress()}"
+                        : "🥷：We're working on it.",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -377,9 +430,7 @@ class QrcodeCard extends StatelessWidget {
           DefaultButton(
             onPressed: () {
               Clipboard.setData(
-                ClipboardData(
-                  text: Constants.simpleAccount.hex,
-                ),
+                ClipboardData(text: Constants.simpleAccount.hex),
               );
               customToast(
                 'Copied to clipboard!',
@@ -390,84 +441,6 @@ class QrcodeCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class TotalBalanceWidget extends ConsumerWidget {
-  const TotalBalanceWidget({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final userBalance = ref.watch(userBalanceProvider);
-
-    return Column(
-      children: [
-        Text(
-          '🥷 Total Balance',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        Gaps.h24,
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/icons/usdc.png',
-              width: 28,
-            ),
-            Gaps.w8,
-
-            //richText with decimal
-            userBalance.when(
-              data: (value) {
-                final balance = value.toStringAsFixed(2);
-                return RichText(
-                  text: TextSpan(
-                    text: balance.split('.')[0],
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.black,
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                        ),
-                    children: [
-                      TextSpan(
-                        text: balance.split('.').length > 1
-                            ? '.${balance.split('.')[1]}'
-                            : '.00',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 28,
-                            ),
-                      ),
-                      TextSpan(
-                        text: 'USDC',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              loading: () {
-                return const SizedBox(
-                  width: 32.0,
-                  height: 52.0,
-                  child: JumpingDotIndicator(
-                    duration: Duration(milliseconds: 300),
-                  ),
-                );
-              },
-              error: (error, _) => Text('Error: $error'),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

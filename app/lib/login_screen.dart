@@ -1,10 +1,8 @@
-import 'package:app/features/home/controllers/user_controller.dart';
 import 'package:app/features/home/home_screen.dart';
 import 'package:app/features/recover/recover_screen.dart';
 import 'package:app/utils/default_button.dart';
 import 'package:app/utils/gaps.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -49,20 +47,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
               ),
               Gaps.h32,
-              // TextField(
-              //   textAlign: TextAlign.center,
-              //   decoration: const InputDecoration(
-              //     hintText: "Your Name",
-              //   ),
-              //   controller: textEditingController,
-              // ),
               const Spacer(),
               DefaultButton(
                   showIcon: false,
                   onPressed: () {
-                    ref
-                        .read(userDataControllerProvider.notifier)
-                        .updatePrivateKey(dotenv.env['WALLET_PRIVATE_KEY']!);
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(

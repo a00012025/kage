@@ -1,14 +1,13 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'dart:developer';
-
 import 'package:app/features/common/constants.dart';
+import 'package:app/features/common/contract/aave_contract.dart';
 import 'package:app/features/common/contract/contract_util.dart';
 import 'package:app/features/common/contract/entry_point_contract.dart';
+import 'package:app/features/common/contract/erc20_contract.dart';
 import 'package:app/features/common/contract/simple_account_factory_contract.dart';
 import 'package:app/features/payment/domain/chain.dart';
 import 'package:app/features/payment/domain/user_operation.dart';
 import 'package:eth_sig_util/eth_sig_util.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:web3dart/crypto.dart';
@@ -25,21 +24,10 @@ class PaymentService {
     return Web3Client('https://rpc.ankr.com/arbitrum', http.Client());
   }
 
-  Future<UserOperation> signUserOperations(
-      BigInt amountToSend, EthereumAddress toAddress) async {
-    final smartContractAccount = Constants.simpleAccount;
-
-    final sendCallData = encodeErc20TransferFunctionCall(
-      to: toAddress,
-      amount: amountToSend,
-    );
-    final callData = encodeExecuteFunctionCall(
-      address: smartContractAccount,
-      params: [Constants.usdc, BigInt.zero, sendCallData],
-    );
+  Future<UserOperation> getDefaultUserOperation(
+      EthereumAddress smartContractAccount) async {
     final nonce = await getNonce(smartContractAccount);
-    debugPrint('=======nonce : $nonce=========');
-    String? initCode; // "0xa0371bd6aeccfee005b49709738e49abce65561d"
+    String? initCode;
     if (nonce == BigInt.zero) {
       final createAccountCallData =
           simpleAccountFactoryContract.function('createAccount').encodeCall([
@@ -51,16 +39,14 @@ class PaymentService {
       initCode =
           '${Constants.simpleAccountFactory.toString()}${bytesToHex(createAccountCallData)}';
     }
-
     const paymasterVerificationGasLimit = 100000;
     const paymasterPostOpGasLimit = 100000;
     final paymasterAndData =
         "${Constants.payMaster.toString()}${paymasterVerificationGasLimit.toRadixString(16).padLeft(32, '0')}${paymasterPostOpGasLimit.toRadixString(16).padLeft(32, '0')}";
-
-    final op = UserOperation.partial(
+    return UserOperation.partial(
       initCode: initCode,
       nonce: nonce,
-      callData: hexlify(callData),
+      callData: "0x",
       paymasterAndData: paymasterAndData,
       sender: smartContractAccount,
       verificationGasLimit:
@@ -68,43 +54,50 @@ class PaymentService {
       callGasLimit: BigInt.from(50000),
       preVerificationGas: BigInt.from(40000),
     );
+  }
 
-    final chain = Chains.getChain(Network.arbitrum);
-    log("op.hash(chain): ${bytesToHex(op.hash(chain), include0x: true)}");
-    final signature = EthSigUtil.signPersonalMessage(
-      privateKey: dotenv.env['WALLET_PRIVATE_KEY']!,
-      message: op.hash(chain),
+  Future<UserOperation> getSendUsdcUserOperation(
+      String amountToSend, EthereumAddress toAddress) async {
+    final amount = (double.tryParse(amountToSend) ?? 0.0) * 1e6;
+    final rawAmount = BigInt.from(amount);
+    final smartContractAccount = Constants.simpleAccount;
+    UserOperation op = await getDefaultUserOperation(smartContractAccount);
+    final sendCallData = encodeErc20TransferFunctionCall(
+      contract: Constants.usdc,
+      to: toAddress,
+      amount: rawAmount,
     );
-
-    op.signature = signature;
-
+    final callData = encodeExecuteFunctionCall(
+      address: smartContractAccount,
+      params: [Constants.usdc, BigInt.zero, sendCallData],
+    );
+    op.callData = hexlify(callData);
+    op.callGasLimit = BigInt.from(50000);
     return op;
   }
 
-  Future<List<UserOperation>> getUserOperations(
-      String amountToSend, EthereumAddress toAddress) async {
-    final amount = (double.tryParse(amountToSend) ?? 0.0) * 1000000;
-    final rawAmount = BigInt.from(amount);
-
-    List<UserOperation> ops = [];
-    final op = await signUserOperations(
-      rawAmount,
-      toAddress,
-    );
-    ops.add(op);
-    return ops;
+  Future<String> sendUsdc(String sendAmount, EthereumAddress toAddress) async {
+    final op = await getSendUsdcUserOperation(sendAmount, toAddress);
+    return sendUserOperations([op]);
   }
 
-  Future<String> sendUserOperation(
-      String sendAmount, EthereumAddress toAddress) async {
-    final ops = await getUserOperations(sendAmount, toAddress);
+  Future<String> sendUserOperations(List<UserOperation> ops) async {
+    final chain = Chains.getChain(Network.arbitrum);
+    for (var op in ops) {
+      final signature = EthSigUtil.signPersonalMessage(
+        privateKey: dotenv.env['WALLET_PRIVATE_KEY']!,
+        message: op.hash(chain),
+      );
+      op.signature = signature;
+    }
     final client = getWeb3Client();
     final relayerPrivateKey = dotenv.env['RELAYER_PRIVATE_KEY']!;
     final privateKey = EthPrivateKey.fromHex(relayerPrivateKey);
-    final gasPrice = await client.getGasPrice();
-    final higherGasPrice = (gasPrice.getInWei.toDouble() * 1.2).toString();
-    final finalGasPrice = BigInt.parse(higherGasPrice.split('.')[0]);
-
+    final maxGas = 150000 * ops.length +
+        ops.fold<int>(
+            0,
+            (previousValue, element) =>
+                previousValue + element.callGasLimit.toInt());
     final transaction = Transaction.callContract(
       contract: entryPointContract,
       function: entryPointContract.handleOps,
@@ -112,20 +105,52 @@ class PaymentService {
         ops.map((e) => e.toList()).toList(),
         privateKey.address,
       ],
-      maxGas: 1000000,
-      maxFeePerGas: EtherAmount.inWei(finalGasPrice),
+      maxGas: maxGas,
+      maxFeePerGas: await getGasPrice(),
     );
     final hash = await client.sendTransaction(privateKey, transaction,
         chainId: Chains.getChain(Network.arbitrum).chainId);
     return hash;
   }
 
-  String hexlify(List<int> intArray) {
-    var ss = <String>[];
-    for (int value in intArray) {
-      ss.add(value.toRadixString(16).padLeft(2, '0'));
+  Future<String> sendInvestUserOperation(String amountToSend) async {
+    final amount = (double.tryParse(amountToSend) ?? 0.0) * 1e6;
+    final rawAmount = BigInt.from(amount);
+    final client = getWeb3Client();
+    final usdcContract = Erc20Contract.create(Constants.usdc);
+    final aaveContract = AaveContract.create();
+    final List<UserOperation> ops = [];
+
+    // if allowance is not enough, approve
+    final allowance = await client.call(
+      contract: usdcContract,
+      function: usdcContract.allowance,
+      params: [Constants.simpleAccount, Constants.aave],
+    );
+    if ((allowance.first as BigInt) < rawAmount) {
+      final approveCallData = usdcContract.function('approve').encodeCall([
+        Constants.aave,
+        rawAmount,
+      ]);
+      final approveOp = await getDefaultUserOperation(Constants.simpleAccount);
+      approveOp.callData = hexlify(approveCallData);
+      approveOp.callGasLimit = BigInt.from(50000);
+      ops.add(approveOp);
     }
-    return "0x${ss.join('')}";
+
+    // invest user operation
+    final investCallData = aaveContract.function('supply').encodeCall([
+      Constants.usdc,
+      rawAmount,
+      Constants.simpleAccount,
+      BigInt.zero,
+    ]);
+    final investOp = await getDefaultUserOperation(Constants.simpleAccount);
+    investOp.callData = hexlify(investCallData);
+    investOp.callGasLimit = BigInt.from(500000);
+    ops.add(investOp);
+
+    return sendUserOperations(ops);
   }
 
   Future<BigInt> getNonce(EthereumAddress address) async {
@@ -140,4 +165,20 @@ class PaymentService {
         ]);
     return nonce.first;
   }
+
+  Future<EtherAmount> getGasPrice() async {
+    final client = getWeb3Client();
+    final gasPrice = await client.getGasPrice();
+    final higherGasPrice = (gasPrice.getInWei.toDouble() * 1.2).toString();
+    final finalGasPrice = BigInt.parse(higherGasPrice.split('.')[0]);
+    return EtherAmount.inWei(finalGasPrice);
+  }
+}
+
+String hexlify(List<int> intArray) {
+  var ss = <String>[];
+  for (int value in intArray) {
+    ss.add(value.toRadixString(16).padLeft(2, '0'));
+  }
+  return "0x${ss.join('')}";
 }

@@ -1,4 +1,3 @@
-import 'package:app/features/home/controllers/user_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,8 +21,6 @@ class _RecoverScreenState extends ConsumerState<RecoverScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userData = ref.watch(userDataControllerProvider);
-    debugPrint('======={userData} : $userData=========');
     return const Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(

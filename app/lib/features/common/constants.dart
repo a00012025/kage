@@ -24,6 +24,14 @@ class Constants {
     "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
   );
 
+  static EthereumAddress aave = EthereumAddress.fromHex(
+    "0x794a61358d6845594f94dc1db02a252b5b4814ad",
+  );
+
+  static EthereumAddress aUsdc = EthereumAddress.fromHex(
+    "0x724dc807b04555b71ed48a6896b6F41593b8C637",
+  );
+
   static EthereumAddress payMaster = EthereumAddress.fromHex(
     "0xf2fc6e2ee4f90bd51cdf403b7dcac6b7fb12e6f9",
   );

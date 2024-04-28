@@ -177,7 +177,7 @@ class _SuccessCardState extends State<SuccessCard> {
 
   void asyncInit() async {
     final service = PaymentService();
-    hash = await service.sendUserOperation(widget.amount, widget.receiver);
+    hash = await service.sendUsdc(widget.amount, widget.receiver);
     setState(() {
       isSuccess = true;
     });

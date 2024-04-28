@@ -21,22 +21,24 @@ Uint8List encodeExecuteBatchFunctionCall(
 }
 
 Uint8List encodeErc20TransferFunctionCall({
+  required EthereumAddress contract,
   required EthereumAddress to,
   required BigInt amount,
 }) {
-  final contract = Erc20Contract.create();
-  return contract.transfer.encodeCall([
+  final c = Erc20Contract.create(contract);
+  return c.transfer.encodeCall([
     to,
     amount,
   ]);
 }
 
 Uint8List encodeErc20ApproveFunctionCall({
+  required EthereumAddress contract,
   required EthereumAddress address,
   required BigInt amount,
 }) {
-  final contract = Erc20Contract.create();
-  return contract.approve.encodeCall([
+  final c = Erc20Contract.create(contract);
+  return c.approve.encodeCall([
     address,
     amount,
   ]);

@@ -1,14 +1,13 @@
 import 'dart:convert';
 
-import 'package:app/features/common/constants.dart';
 import 'package:web3dart/web3dart.dart';
 
 class Erc20Contract extends DeployedContract {
   Erc20Contract(ContractAbi abi, EthereumAddress address) : super(abi, address);
-  static Erc20Contract create() {
+  static Erc20Contract create(EthereumAddress address) {
     return Erc20Contract(
       ContractAbi.fromJson(jsonEncode(erc20Abi), 'USDC'),
-      Constants.usdc,
+      address,
     );
   }
 

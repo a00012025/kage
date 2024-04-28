@@ -32,10 +32,10 @@ class UserOperation implements UserOperationBase {
   final String initCode;
 
   @override
-  final String callData;
+  String callData;
 
   @override
-  final BigInt callGasLimit;
+  BigInt callGasLimit;
 
   @override
   final BigInt verificationGasLimit;
