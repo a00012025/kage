@@ -69,7 +69,7 @@ class TotalBalanceWidget extends ConsumerWidget {
               loading: () {
                 return const SizedBox(
                   width: 32.0,
-                  height: 52.0,
+                  height: 64.0,
                   child: JumpingDotIndicator(
                     duration: Duration(milliseconds: 300),
                   ),
@@ -93,7 +93,7 @@ class TotalBalanceWidget extends ConsumerWidget {
           loading: () {
             return const SizedBox(
               width: 32.0,
-              height: 32.0,
+              height: 28.0,
               child: JumpingDotIndicator(
                 duration: Duration(milliseconds: 300),
               ),

@@ -1,5 +1,5 @@
 import 'dart:math';
-
+import 'package:shimmer/shimmer.dart';
 import 'package:app/features/common/constants.dart';
 import 'package:app/features/common/sending_tx_card.dart';
 import 'package:app/features/home/controllers/user_balance_controller.dart';
@@ -62,7 +62,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final userTxs = ref.watch(userTxsProvider);
     final userBalance = ref.watch(userBalanceProvider);
-    // debugPrint('======={userTxs} : $userTxs=========');
+    final isLoading = userTxs.isLoading || userTxs.asData?.value == null;
+    final filteredTxs = userTxs.asData?.value
+            .where((tx) => !(tx.counterParty.toLowerCase() ==
+                    '0x724dc807b04555b71ed48a6896b6f41593b8c637' &&
+                tx.balanceChange > 0))
+            .toList() ??
+        [];
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -100,44 +106,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 ),
-                userTxs.when(
-                  data: (value) {
-                    final filteredTxs = value
-                        .where((tx) =>
-                            // filter out withdraw tx
-                            !(tx.counterParty.toLowerCase() ==
-                                    '0x724dc807b04555b71ed48a6896b6f41593b8c637' &&
-                                tx.balanceChange > 0))
-                        .toList();
-                    return SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (BuildContext context, int index) {
-                          return AnimationConfiguration.staggeredList(
-                            position: index,
-                            duration: const Duration(milliseconds: 375),
-                            child: SlideAnimation(
-                              verticalOffset: 150.0,
-                              child: TxHistoryItem(value: filteredTxs[index]),
-                            ),
-                          );
-                        },
-                        childCount: filteredTxs.length,
-                      ),
-                    );
-                  },
-                  loading: () => const SliverToBoxAdapter(
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (BuildContext context, int index) {
+                      return AnimationConfiguration.staggeredList(
+                        position: index,
+                        duration: const Duration(milliseconds: 375),
+                        child: SlideAnimation(
+                          verticalOffset: 50.0,
+                          child: FadeInAnimation(
+                            child: isLoading
+                                ? Shimmer.fromColors(
+                                    baseColor: Colors.black87,
+                                    highlightColor: Colors.grey[600]!,
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                          vertical: 4.0, horizontal: 12.0),
+                                      height: 80,
+                                      decoration: BoxDecoration(
+                                        color: Colors.black,
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
+                                      ),
+                                    ),
+                                  )
+                                : TxHistoryItem(value: filteredTxs[index]),
+                          ),
+                        ),
+                      );
+                    },
+                    childCount:
+                        userTxs.isLoading || userTxs.asData?.value == null
+                            ? 10
+                            : userTxs.asData!.value.length,
+                  ),
+                ),
+                if (userTxs.isLoading)
+                  const SliverFillRemaining(
                     child: Center(
                       child: CircularProgressIndicator(
                         color: Colors.black,
                       ),
                     ),
                   ),
-                  error: (error, _) => SliverToBoxAdapter(
+                if (userTxs.hasError)
+                  SliverFillRemaining(
                     child: Center(
-                      child: Text('Error: $error'),
+                      child: Text('Error: ${userTxs.error}'),
                     ),
                   ),
-                ),
               ],
             ),
           ),

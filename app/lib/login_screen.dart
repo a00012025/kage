@@ -3,16 +3,15 @@ import 'package:app/features/recover/recover_screen.dart';
 import 'package:app/utils/default_button.dart';
 import 'package:app/utils/gaps.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _LoginScreenState();
+  State<StatefulWidget> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final textEditingController = TextEditingController();
   @override
   Widget build(BuildContext context) {
@@ -42,35 +41,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Text(
                 'Smart, Secure, Yours.',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
               ),
-              Gaps.h32,
               const Spacer(),
               DefaultButton(
-                  showIcon: false,
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const HomeScreen(),
-                      ),
-                    );
-                  },
-                  text: "I'm New Here"),
+                showIcon: false,
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HomeScreen(),
+                    ),
+                  );
+                },
+                text: "I'm New Here",
+              ),
               Gaps.h16,
               DefaultButton(
-                  showIcon: false,
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const RecoverScreen(),
-                      ),
-                    );
-                  },
-                  text: "I already have an account"),
+                showIcon: false,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RecoverScreen(),
+                    ),
+                  );
+                },
+                text: "I already have an account",
+              ),
             ],
           ),
         ),

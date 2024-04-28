@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class AppTap extends StatefulWidget {
   const AppTap({
@@ -24,34 +25,30 @@ class _AppTapState extends State<AppTap> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => widget.onTap.call(),
-        onTapDown: (details) {
-          setState(() {
-            isPressing = true;
-          });
-
-          HapticFeedback.mediumImpact();
-        },
-        onTapUp: (details) {
-          setState(() {
-            isPressing = false;
-          });
-          widget.onTapUp?.call(details);
-        },
-        onTapCancel: () {
-          setState(() {
-            isPressing = true;
-          });
-        },
-        child: AnimatedScale(
-          scale: (isPressing && widget.hasEffect) ? 0.95 : 1,
-          duration: const Duration(milliseconds: 250),
-          child: widget.child,
-        ),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => widget.onTap.call(),
+      onTapDown: (details) {
+        setState(() {
+          isPressing = true;
+        });
+        HapticFeedback.mediumImpact();
+      },
+      onTapUp: (details) {
+        setState(() {
+          isPressing = false;
+        });
+        widget.onTapUp?.call(details);
+      },
+      onTapCancel: () {
+        setState(() {
+          isPressing = false;
+        });
+      },
+      child: AnimatedScale(
+        scale: (isPressing && widget.hasEffect) ? 0.95 : 1,
+        duration: 100.ms,
+        child: widget.child,
       ),
     );
   }

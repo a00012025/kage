@@ -35,23 +35,24 @@ class DefaultButton extends StatelessWidget {
                 Container(
                   width: double.maxFinite,
                   padding: const EdgeInsets.all(Spacings.px12),
-                  child: Text(text,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          )),
+                  child: Text(
+                    text,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
                 ),
           )
               .animate(
-                  onPlay: (controller) => controller.repeat(reverse: false))
-              .shimmer(
-                duration: const Duration(milliseconds: 1300),
-                delay: const Duration(milliseconds: 3000),
-              ),
+                onPlay: (controller) => controller.repeat(reverse: false),
+              )
+              .shimmer(duration: 1.3.seconds, delay: 3.seconds),
           if (showIcon)
             Positioned(
               top: 12,
+              left: 6,
               child: Padding(
                 padding: const EdgeInsets.only(left: Spacings.px8),
                 child: Image.asset(
@@ -59,11 +60,9 @@ class DefaultButton extends StatelessWidget {
                   width: 24,
                 )
                     .animate(
-                        onPlay: (controller) =>
-                            controller.repeat(reverse: true))
-                    .flipH(
-                      duration: const Duration(milliseconds: 300),
-                    ),
+                      onPlay: (controller) => controller.repeat(reverse: true),
+                    )
+                    .flipH(duration: 300.ms),
               ),
             ),
         ],

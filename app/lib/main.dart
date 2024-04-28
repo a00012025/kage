@@ -1,3 +1,5 @@
+import 'package:app/features/home/controllers/user_balance_controller.dart';
+import 'package:app/features/home/controllers/user_txs_controller.dart';
 import 'package:app/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,17 +20,33 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return OKToast(
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Kage',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.black87),
-          scaffoldBackgroundColor: Colors.white,
-          useMaterial3: true,
+    return _EagerInitialization(
+      child: OKToast(
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Kage',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.black87),
+            scaffoldBackgroundColor: Colors.white,
+            useMaterial3: true,
+          ),
+          home: const LoginScreen(),
         ),
-        home: const LoginScreen(),
       ),
     );
+  }
+}
+
+class _EagerInitialization extends ConsumerWidget {
+  const _EagerInitialization({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Eagerly initialize providers by watching them.
+    // By using "watch", the provider will stay alive and not be disposed.
+    ref.watch(userTxsProvider);
+    ref.watch(userBalanceProvider);
+    return child;
   }
 }

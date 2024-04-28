@@ -15,8 +15,6 @@ part 'user_txs_controller.g.dart';
 @Riverpod(keepAlive: true)
 class UserTxs extends _$UserTxs {
   Future<void> updateState() async {
-    state = const AsyncLoading();
-
     state = await AsyncValue.guard(() async {
       return await getUsdcTxs();
     });
