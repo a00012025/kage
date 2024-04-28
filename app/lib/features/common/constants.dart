@@ -36,5 +36,13 @@ class Constants {
     "0xf2fc6e2ee4f90bd51cdf403b7dcac6b7fb12e6f9",
   );
 
+  static EthereumAddress aaveUiPoolDataProvider = EthereumAddress.fromHex(
+    "0x145dE30c929a065582da84Cf96F88460dB9745A7",
+  );
+
+  static EthereumAddress aavePoolAddressesProvider = EthereumAddress.fromHex(
+    "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb",
+  );
+
   Constants._();
 }

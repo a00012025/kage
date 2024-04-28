@@ -92,11 +92,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     background: const Column(
                       children: [
-                        Gaps.h32,
+                        Gaps.h24,
                         TotalBalanceWidget(),
-                        Gaps.h32,
+                        Gaps.h24,
                         SendReceiveBtn(),
-                        Gaps.h32,
+                        Gaps.h24,
                       ],
                     ),
                   ),

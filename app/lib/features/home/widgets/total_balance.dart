@@ -1,3 +1,4 @@
+import 'package:app/features/home/controllers/aave_data_controller.dart';
 import 'package:app/features/home/controllers/user_balance_controller.dart';
 import 'package:app/features/home/domain/jumping_dot.dart';
 import 'package:app/utils/gaps.dart';
@@ -12,6 +13,7 @@ class TotalBalanceWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userBalance = ref.watch(userBalanceProvider);
+    final aaveApy = ref.watch(aaveDataProvider);
 
     return Column(
       children: [
@@ -21,7 +23,7 @@ class TotalBalanceWidget extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
               ),
         ),
-        Gaps.h24,
+        Gaps.h12,
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -76,6 +78,28 @@ class TotalBalanceWidget extends ConsumerWidget {
               error: (error, _) => Text('Error: $error'),
             ),
           ],
+        ),
+        // Gaps.h8,
+        aaveApy.when(
+          data: (value) {
+            return Text(
+              'Saving APY: ${(value * 100).toStringAsFixed(2)}%',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+            );
+          },
+          loading: () {
+            return const SizedBox(
+              width: 32.0,
+              height: 32.0,
+              child: JumpingDotIndicator(
+                duration: Duration(milliseconds: 300),
+              ),
+            );
+          },
+          error: (error, _) => Text('Error: $error'),
         ),
       ],
     );
