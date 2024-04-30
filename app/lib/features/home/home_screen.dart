@@ -67,7 +67,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final filteredTxs = (userTxs.value ?? [])
         .where((tx) => !(tx.counterParty.toLowerCase() == Constants.aUsdc.hex &&
             tx.balanceChange > 0))
-        .take(5)
         .toList();
 
     return Scaffold(
