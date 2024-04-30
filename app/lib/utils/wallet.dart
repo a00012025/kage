@@ -36,7 +36,7 @@ String privateKeyToAddress(String privateKey) {
   return priKey.address.hex;
 }
 
-Future<String> mnemonicToAddress(String mnemonic) async {
+Future<String> mnemonicToPrivateKey(String mnemonic) async {
   const derivationPath = "m/44'/60'/0'/0/0";
   final seed = await mnemonicToSeed(mnemonic);
   final root = Bip32Slip10Secp256k1.fromSeed(seed);
@@ -44,9 +44,7 @@ Future<String> mnemonicToAddress(String mnemonic) async {
   if (child.privateKey.raw.isEmpty) {
     throw Exception("child.privateKey is null");
   }
-  final privateKey = child.privateKey.toHex();
-  final priKey = EthPrivateKey.fromHex(privateKey);
-  return priKey.address.hex;
+  return child.privateKey.toHex();
 }
 
 // This is for replace bip32.mnemonicToSeed from bip32 package, cause it's too slow

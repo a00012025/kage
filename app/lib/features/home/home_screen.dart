@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:app/features/home/controllers/user_wallet_controller.dart';
 import 'package:app/login_screen.dart';
-import 'package:shimmer/shimmer.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app/features/common/constants.dart';
 import 'package:app/features/common/sending_tx_card.dart';
 import 'package:app/features/home/controllers/user_balance_controller.dart';
@@ -64,13 +64,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final userTxs = ref.watch(userTxsProvider);
     final userBalance = ref.watch(userBalanceProvider);
-    final isLoading = userTxs.isLoading || userTxs.asData?.value == null;
-    final filteredTxs = userTxs.asData?.value
-            .where((tx) => !(tx.counterParty.toLowerCase() ==
-                    '0x724dc807b04555b71ed48a6896b6f41593b8c637' &&
-                tx.balanceChange > 0))
-            .toList() ??
-        [];
+    final filteredTxs = (userTxs.value ?? [])
+        .where((tx) => !(tx.counterParty.toLowerCase() == Constants.aUsdc.hex &&
+            tx.balanceChange > 0))
+        .take(5)
+        .toList();
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -88,6 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   slivers: <Widget>[
                     SliverAppBar(
                       pinned: true, // 固定AppBar在顶部
+                      backgroundColor: Colors.white,
                       surfaceTintColor: Colors.transparent,
                       expandedHeight: 300.0,
                       flexibleSpace: FlexibleSpaceBar(
@@ -121,33 +121,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             child: SlideAnimation(
                               verticalOffset: 50.0,
                               child: FadeInAnimation(
-                                child: isLoading
-                                    ? Shimmer.fromColors(
-                                        baseColor: Colors.black87,
-                                        highlightColor: Colors.grey[600]!,
-                                        child: Container(
-                                          margin: const EdgeInsets.symmetric(
-                                              vertical: 4.0, horizontal: 12.0),
-                                          height: 80,
-                                          decoration: BoxDecoration(
-                                            color: Colors.black,
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                          ),
+                                child: userTxs.isLoading &&
+                                        (!userTxs.isReloading ||
+                                            filteredTxs.isEmpty)
+                                    ? Container(
+                                        margin: const EdgeInsets.symmetric(
+                                            vertical: 4.0, horizontal: 12.0),
+                                        height: 80,
+                                        decoration: BoxDecoration(
+                                          color: Colors.black26,
+                                          borderRadius:
+                                              BorderRadius.circular(12.0),
                                         ),
                                       )
+                                        .animate(
+                                          onPlay: (controller) =>
+                                              controller.repeat(reverse: false),
+                                        )
+                                        .shimmer(duration: 1.seconds)
                                     : TxHistoryItem(value: filteredTxs[index]),
                               ),
                             ),
                           );
                         },
-                        childCount:
-                            userTxs.isLoading || userTxs.asData?.value == null
-                                ? 10
-                                : filteredTxs.length,
+                        childCount: (userTxs.isLoading &&
+                                (!userTxs.isReloading || filteredTxs.isEmpty))
+                            ? 10
+                            : filteredTxs.length,
                       ),
                     ),
-                    if (userTxs.isLoading)
+                    if ((!userTxs.isLoading || userTxs.isReloading) &&
+                        filteredTxs.isEmpty)
+                      const SliverFillRemaining(
+                        child: Align(
+                          alignment: Alignment.topCenter,
+                          child: Text(
+                            'No transactions',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    if ((!userTxs.isLoading || userTxs.isReloading) &&
+                        filteredTxs.isNotEmpty)
+                      const SliverFillRemaining(child: SizedBox()),
+                    if (userTxs.isLoading && !userTxs.isReloading)
                       const SliverFillRemaining(
                         child: Center(
                           child: CircularProgressIndicator(
@@ -168,16 +188,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Positioned(
                 top: 10,
                 right: 10,
-                child: IconButton(
-                  icon: const Icon(Icons.logout),
-                  onPressed: () {
-                    ref.read(userWalletProvider.notifier).clear();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const LoginScreen()),
-                    );
-                  },
+                child: Opacity(
+                  opacity: 1 - _opacity,
+                  child: IconButton(
+                    icon: const Icon(Icons.logout),
+                    onPressed: () {
+                      ref.read(userWalletProvider.notifier).clear();
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LoginScreen()),
+                      );
+                    },
+                  ),
                 ))
           ],
         ),
@@ -352,7 +375,7 @@ class _InvestCardState extends ConsumerState<InvestCard> {
   }
 }
 
-class InvestingCard extends StatefulWidget {
+class InvestingCard extends ConsumerStatefulWidget {
   const InvestingCard({
     super.key,
     required this.amount,
@@ -361,10 +384,10 @@ class InvestingCard extends StatefulWidget {
   final String amount;
 
   @override
-  State<InvestingCard> createState() => _InvestingCardState();
+  ConsumerState<ConsumerStatefulWidget> createState() => _InvestingCardState();
 }
 
-class _InvestingCardState extends State<InvestingCard> {
+class _InvestingCardState extends ConsumerState<InvestingCard> {
   bool isSuccess = false;
   String hash = '';
   @override
@@ -375,7 +398,12 @@ class _InvestingCardState extends State<InvestingCard> {
 
   void asyncInit() async {
     final service = PaymentService();
-    hash = await service.sendInvestUserOperation(widget.amount);
+    final userWallet = ref.read(userWalletProvider);
+    if ((userWallet.value?.walletAddress ?? '').isEmpty) {
+      return;
+    }
+    hash =
+        await service.sendInvestUserOperation(userWallet.value!, widget.amount);
     setState(() {
       isSuccess = true;
     });

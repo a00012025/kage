@@ -1,14 +1,51 @@
+import 'package:app/features/home/controllers/user_wallet_controller.dart';
 import 'package:app/features/home/home_screen.dart';
 import 'package:app/features/recover/recover_screen.dart';
 import 'package:app/utils/default_button.dart';
 import 'package:app/utils/gaps.dart';
+import 'package:app/utils/toast.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
+  ConsumerState<ConsumerStatefulWidget> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  bool loading = false;
+
+  @override
   Widget build(BuildContext context) {
+    ref.listen(userWalletProvider, (prev, walletData) {
+      walletData.when(
+        data: (data) {
+          if (data.walletAddress.isNotEmpty) {
+            customToast('Create successfully');
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+              (route) => false,
+            );
+          } else {
+            setState(() {
+              loading = false;
+            });
+          }
+        },
+        loading: () {},
+        error: (e, s) {
+          customToast('Something went wrong, please try again',
+              showIcon: false);
+          setState(() {
+            loading = false;
+          });
+        },
+      );
+    });
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -42,11 +79,12 @@ class LoginScreen extends StatelessWidget {
               const Spacer(),
               DefaultButton(
                 showIcon: false,
+                isDisable: loading,
                 onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HomeScreen()),
-                  );
+                  ref.read(userWalletProvider.notifier).generateNewWallet();
+                  setState(() {
+                    loading = true;
+                  });
                 },
                 text: "I'm New Here",
               ),
@@ -61,7 +99,7 @@ class LoginScreen extends StatelessWidget {
                     ),
                   );
                 },
-                text: "I already have an account",
+                text: "I already have a wallet",
               ),
             ],
           ),

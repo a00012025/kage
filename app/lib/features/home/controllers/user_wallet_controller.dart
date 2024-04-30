@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:bip39/bip39.dart' as bip39;
 import 'package:app/features/home/domain/wallet.dart';
 import 'package:app/utils/wallet.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -17,6 +17,7 @@ class UserWallet extends _$UserWallet {
     if (data == null) {
       return WalletData.empty();
     }
+    print('data: $data');
     return WalletData.fromJson(jsonDecode(data));
   }
 
@@ -31,13 +32,22 @@ class UserWallet extends _$UserWallet {
     state = AsyncValue.data(wallet);
   }
 
+  Future<void> generateNewWallet() async {
+    final mnemonic = bip39.generateMnemonic();
+    print('mnemonic: $mnemonic');
+    await importMnemonic(mnemonic);
+  }
+
   Future<void> importMnemonic(String mnemonic) async {
-    final ownerAddress = await mnemonicToAddress(mnemonic);
+    final privateKey = await mnemonicToPrivateKey(mnemonic);
+    final ownerAddress = privateKeyToAddress(privateKey);
     final wallet = WalletData(
       mnemonic: mnemonic,
+      privateKey: privateKey,
       ownerAddress: ownerAddress,
       walletAddress: await getSmartContractWalletAddress(ownerAddress),
     );
+    print('wallet: $wallet');
     await saveWallet(wallet);
     state = AsyncValue.data(wallet);
   }

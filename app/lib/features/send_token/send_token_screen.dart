@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:app/features/common/sending_tx_card.dart';
 import 'package:app/features/home/controllers/user_balance_controller.dart';
 import 'package:app/features/home/controllers/user_txs_controller.dart';
+import 'package:app/features/home/controllers/user_wallet_controller.dart';
 import 'package:app/features/payment/application/payment_service.dart';
 import 'package:app/utils/default_button.dart';
 import 'package:app/utils/gaps.dart';
@@ -175,7 +176,7 @@ class _SendTokenScreenState extends ConsumerState<SendTokenScreen> {
   }
 }
 
-class SendingTokenCard extends StatefulWidget {
+class SendingTokenCard extends ConsumerStatefulWidget {
   const SendingTokenCard({
     super.key,
     required this.receiver,
@@ -186,10 +187,11 @@ class SendingTokenCard extends StatefulWidget {
   final String amount;
 
   @override
-  State<SendingTokenCard> createState() => _SendingTokenCardState();
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      _SendingTokenCardState();
 }
 
-class _SendingTokenCardState extends State<SendingTokenCard> {
+class _SendingTokenCardState extends ConsumerState<SendingTokenCard> {
   bool isSuccess = false;
   String hash = '';
   @override
@@ -201,7 +203,12 @@ class _SendingTokenCardState extends State<SendingTokenCard> {
 
   void asyncInit() async {
     final service = PaymentService();
-    hash = await service.sendUsdc(widget.amount, widget.receiver);
+    final userWallet = ref.read(userWalletProvider);
+    if ((userWallet.value?.walletAddress ?? '').isEmpty) {
+      return;
+    }
+    hash = await service.sendUsdc(
+        userWallet.value!, widget.amount, widget.receiver);
     setState(() {
       isSuccess = true;
     });

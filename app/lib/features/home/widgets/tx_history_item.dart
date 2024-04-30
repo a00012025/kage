@@ -1,3 +1,4 @@
+import 'package:app/features/common/constants.dart';
 import 'package:app/features/home/domain/tx_data.dart';
 import 'package:app/utils/app_tap.dart';
 import 'package:app/utils/gaps.dart';
@@ -26,8 +27,7 @@ class TxHistoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isInvest = value.counterParty.toLowerCase() ==
-        '0x724dc807b04555b71ed48a6896b6f41593b8c637';
+    final isInvest = value.counterParty.toLowerCase() == Constants.aUsdc.hex;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: AppTap(

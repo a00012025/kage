@@ -14,15 +14,6 @@ class Constants {
     "0x12E49fFC4A46514d3FdEae7Dfe8cc004ed8262cA",
   );
 
-  // FIXME: derive from private key
-  static EthereumAddress simpleAccountOwner =
-      EthereumAddress.fromHex('0xcf60Ca2Bc16FA2B47c0898FA998b3b167C4F3907');
-
-  // FIXME: derive from private key
-  static EthereumAddress simpleAccount = EthereumAddress.fromHex(
-    "0xA80DC1b0f4109d3440dD5c20835bE08902f56b19",
-  );
-
   static EthereumAddress usdc = EthereumAddress.fromHex(
     "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
   );

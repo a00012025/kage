@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:web3dart/web3dart.dart';
 
 part 'wallet.freezed.dart';
 part 'wallet.g.dart';
@@ -9,7 +10,7 @@ class WalletData with _$WalletData {
 
   const factory WalletData({
     String? mnemonic,
-    String? privateKey,
+    required String privateKey,
     required String ownerAddress,
     required String walletAddress,
   }) = _WalletData;
@@ -19,8 +20,11 @@ class WalletData with _$WalletData {
 
   factory WalletData.empty() => const WalletData(
         mnemonic: null,
-        privateKey: null,
+        privateKey: '',
         ownerAddress: '',
         walletAddress: '',
       );
+
+  get owner => EthereumAddress.fromHex(ownerAddress);
+  get account => EthereumAddress.fromHex(walletAddress);
 }

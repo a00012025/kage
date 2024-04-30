@@ -21,7 +21,7 @@ WalletData _$WalletDataFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$WalletData {
   String? get mnemonic => throw _privateConstructorUsedError;
-  String? get privateKey => throw _privateConstructorUsedError;
+  String get privateKey => throw _privateConstructorUsedError;
   String get ownerAddress => throw _privateConstructorUsedError;
   String get walletAddress => throw _privateConstructorUsedError;
 
@@ -39,7 +39,7 @@ abstract class $WalletDataCopyWith<$Res> {
   @useResult
   $Res call(
       {String? mnemonic,
-      String? privateKey,
+      String privateKey,
       String ownerAddress,
       String walletAddress});
 }
@@ -58,7 +58,7 @@ class _$WalletDataCopyWithImpl<$Res, $Val extends WalletData>
   @override
   $Res call({
     Object? mnemonic = freezed,
-    Object? privateKey = freezed,
+    Object? privateKey = null,
     Object? ownerAddress = null,
     Object? walletAddress = null,
   }) {
@@ -67,10 +67,10 @@ class _$WalletDataCopyWithImpl<$Res, $Val extends WalletData>
           ? _value.mnemonic
           : mnemonic // ignore: cast_nullable_to_non_nullable
               as String?,
-      privateKey: freezed == privateKey
+      privateKey: null == privateKey
           ? _value.privateKey
           : privateKey // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as String,
       ownerAddress: null == ownerAddress
           ? _value.ownerAddress
           : ownerAddress // ignore: cast_nullable_to_non_nullable
@@ -93,7 +93,7 @@ abstract class _$$WalletDataImplCopyWith<$Res>
   @useResult
   $Res call(
       {String? mnemonic,
-      String? privateKey,
+      String privateKey,
       String ownerAddress,
       String walletAddress});
 }
@@ -110,7 +110,7 @@ class __$$WalletDataImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? mnemonic = freezed,
-    Object? privateKey = freezed,
+    Object? privateKey = null,
     Object? ownerAddress = null,
     Object? walletAddress = null,
   }) {
@@ -119,10 +119,10 @@ class __$$WalletDataImplCopyWithImpl<$Res>
           ? _value.mnemonic
           : mnemonic // ignore: cast_nullable_to_non_nullable
               as String?,
-      privateKey: freezed == privateKey
+      privateKey: null == privateKey
           ? _value.privateKey
           : privateKey // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as String,
       ownerAddress: null == ownerAddress
           ? _value.ownerAddress
           : ownerAddress // ignore: cast_nullable_to_non_nullable
@@ -140,7 +140,7 @@ class __$$WalletDataImplCopyWithImpl<$Res>
 class _$WalletDataImpl extends _WalletData {
   const _$WalletDataImpl(
       {this.mnemonic,
-      this.privateKey,
+      required this.privateKey,
       required this.ownerAddress,
       required this.walletAddress})
       : super._();
@@ -151,7 +151,7 @@ class _$WalletDataImpl extends _WalletData {
   @override
   final String? mnemonic;
   @override
-  final String? privateKey;
+  final String privateKey;
   @override
   final String ownerAddress;
   @override
@@ -199,7 +199,7 @@ class _$WalletDataImpl extends _WalletData {
 abstract class _WalletData extends WalletData {
   const factory _WalletData(
       {final String? mnemonic,
-      final String? privateKey,
+      required final String privateKey,
       required final String ownerAddress,
       required final String walletAddress}) = _$WalletDataImpl;
   const _WalletData._() : super._();
@@ -210,7 +210,7 @@ abstract class _WalletData extends WalletData {
   @override
   String? get mnemonic;
   @override
-  String? get privateKey;
+  String get privateKey;
   @override
   String get ownerAddress;
   @override
