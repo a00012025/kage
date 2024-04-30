@@ -1,24 +1,25 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'user_txs_controller.dart';
+part of 'user_wallet_controller.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$userTxsHash() => r'3e5e3ffe44b4c25ab5c0053f080484669c1fb46c';
+String _$userWalletHash() => r'003c396de7693bcc260f1895fca0acba03c9a6d8';
 
-/// See also [UserTxs].
-@ProviderFor(UserTxs)
-final userTxsProvider = AsyncNotifierProvider<UserTxs, List<TxData>>.internal(
-  UserTxs.new,
-  name: r'userTxsProvider',
+/// See also [UserWallet].
+@ProviderFor(UserWallet)
+final userWalletProvider =
+    AsyncNotifierProvider<UserWallet, WalletData>.internal(
+  UserWallet.new,
+  name: r'userWalletProvider',
   debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$userTxsHash,
+      const bool.fromEnvironment('dart.vm.product') ? null : _$userWalletHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$UserTxs = AsyncNotifier<List<TxData>>;
+typedef _$UserWallet = AsyncNotifier<WalletData>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

@@ -11,7 +11,6 @@ part 'user_balance_controller.g.dart';
 class UserBalance extends _$UserBalance {
   Future<void> updateState() async {
     state = const AsyncLoading();
-
     state = await AsyncValue.guard(() async {
       return await getBalance();
     });

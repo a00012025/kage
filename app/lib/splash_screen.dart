@@ -1,14 +1,12 @@
-import 'package:app/features/home/home_screen.dart';
-import 'package:app/features/recover/recover_screen.dart';
-import 'package:app/utils/default_button.dart';
 import 'package:app/utils/gaps.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class SplashScreen extends ConsumerWidget {
+  const SplashScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -17,7 +15,7 @@ class LoginScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Gaps.h64,
+              const Spacer(),
               const Text(
                 "🌗",
                 style: TextStyle(fontSize: 48),
@@ -40,31 +38,6 @@ class LoginScreen extends StatelessWidget {
                     ),
               ),
               const Spacer(),
-              DefaultButton(
-                showIcon: false,
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const HomeScreen(),
-                    ),
-                  );
-                },
-                text: "I'm New Here",
-              ),
-              Gaps.h16,
-              DefaultButton(
-                showIcon: false,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RecoverScreen(),
-                    ),
-                  );
-                },
-                text: "I already have an account",
-              ),
             ],
           ),
         ),
