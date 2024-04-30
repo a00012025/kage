@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:app/features/common/contract/erc20_contract.dart';
-import 'package:app/features/common/contract/simple_account_contract.dart';
+import 'package:app/contracts/erc20_contract.dart';
+import 'package:app/contracts/simple_account_contract.dart';
 import 'package:web3dart/web3dart.dart';
 
 Uint8List encodeExecuteFunctionCall(

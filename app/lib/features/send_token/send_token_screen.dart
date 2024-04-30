@@ -160,8 +160,8 @@ class _SendTokenScreenState extends ConsumerState<SendTokenScreen> {
                           amount: textEditingController.text,
                         );
                       });
-                  ref.read(userBalanceProvider.notifier).updateState();
-                  ref.read(userTxsProvider.notifier).updateState();
+                  ref.read(userBalanceProvider.notifier).refresh();
+                  ref.read(userTxsProvider.notifier).refresh();
                   Navigator.pop(context);
                   Navigator.pop(context);
                 },

@@ -23,7 +23,9 @@ class DefaultButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppTap(
-      onTap: onPressed,
+      onTap: () {
+        if (!isDisable) onPressed();
+      },
       child: Stack(
         children: [
           DecoratedBox(

@@ -1,5 +1,6 @@
 import 'package:app/features/common/constants.dart';
-import 'package:app/features/common/contract/erc20_contract.dart';
+import 'package:app/contracts/erc20_contract.dart';
+import 'package:app/features/home/controllers/user_wallet_controller.dart';
 import 'package:app/features/home/domain/balance_data.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:web3dart/web3dart.dart';
@@ -7,25 +8,27 @@ import 'package:http/http.dart' as http;
 
 part 'user_balance_controller.g.dart';
 
-@Riverpod(keepAlive: true)
+@riverpod
 class UserBalance extends _$UserBalance {
-  Future<void> updateState() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      return await getBalance();
-    });
+  @override
+  Future<BalanceData> build() async {
+    final wallet = await ref.watch(userWalletProvider.future);
+    return getBalance(wallet.walletAddress);
   }
 
-  @override
-  FutureOr<BalanceData> build() {
-    state = const AsyncLoading();
-    return getBalance();
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    final wallet = await ref.read(userWalletProvider.future);
+    final balance = await getBalance(wallet.walletAddress);
+    state = AsyncValue.data(balance);
   }
 }
 
 var web3Client = Web3Client(Constants.rpcUrl, http.Client());
-Future<BalanceData> getBalance() async {
-  final address = Constants.simpleAccount;
+Future<BalanceData> getBalance(String walletAddress) async {
+  if (walletAddress.isEmpty) return BalanceData(usdc: 0, aUsdc: 0);
+  final address = EthereumAddress.fromHex(walletAddress);
+
   final usdcContract = Erc20Contract.create(Constants.usdc);
   final aUsdcContract = Erc20Contract.create(Constants.aUsdc);
   final results = await Future.wait([

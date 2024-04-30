@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'package:app/features/home/controllers/user_wallet_controller.dart';
+import 'package:app/login_screen.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:app/features/common/constants.dart';
 import 'package:app/features/common/sending_tx_card.dart';
@@ -73,91 +75,111 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         bottom: false,
-        child: AnimationLimiter(
-          child: RefreshIndicator(
-            onRefresh: () async {
-              ref.read(userBalanceProvider.notifier).updateState();
-              ref.read(userTxsProvider.notifier).updateState();
-            },
-            child: CustomScrollView(
-              controller: _scrollController,
-              slivers: <Widget>[
-                SliverAppBar(
-                  pinned: true, // 固定AppBar在顶部
-                  surfaceTintColor: Colors.transparent,
-                  expandedHeight: 300.0,
-                  flexibleSpace: FlexibleSpaceBar(
-                    collapseMode: CollapseMode.parallax,
-                    title: Opacity(
-                      opacity: _opacity,
-                      child: userBalance.when(
-                          data: (value) => AppBarSmall(balance: value.total),
-                          error: (error, _) => const AppBarSmall(balance: 0),
-                          loading: () => const AppBarSmall(balance: 0)),
-                    ),
-                    background: const Column(
-                      children: [
-                        Gaps.h24,
-                        TotalBalanceWidget(),
-                        Gaps.h24,
-                        SendReceiveBtn(),
-                        Gaps.h24,
-                      ],
-                    ),
-                  ),
-                ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (BuildContext context, int index) {
-                      return AnimationConfiguration.staggeredList(
-                        position: index,
-                        duration: const Duration(milliseconds: 375),
-                        child: SlideAnimation(
-                          verticalOffset: 50.0,
-                          child: FadeInAnimation(
-                            child: isLoading
-                                ? Shimmer.fromColors(
-                                    baseColor: Colors.black87,
-                                    highlightColor: Colors.grey[600]!,
-                                    child: Container(
-                                      margin: const EdgeInsets.symmetric(
-                                          vertical: 4.0, horizontal: 12.0),
-                                      height: 80,
-                                      decoration: BoxDecoration(
-                                        color: Colors.black,
-                                        borderRadius:
-                                            BorderRadius.circular(12.0),
-                                      ),
-                                    ),
-                                  )
-                                : TxHistoryItem(value: filteredTxs[index]),
-                          ),
+        child: Stack(
+          children: [
+            AnimationLimiter(
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  ref.read(userBalanceProvider.notifier).refresh();
+                  ref.read(userTxsProvider.notifier).refresh();
+                },
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  slivers: <Widget>[
+                    SliverAppBar(
+                      pinned: true, // 固定AppBar在顶部
+                      surfaceTintColor: Colors.transparent,
+                      expandedHeight: 300.0,
+                      flexibleSpace: FlexibleSpaceBar(
+                        collapseMode: CollapseMode.parallax,
+                        title: Opacity(
+                          opacity: _opacity,
+                          child: userBalance.when(
+                              data: (value) =>
+                                  AppBarSmall(balance: value.total),
+                              error: (error, _) =>
+                                  const AppBarSmall(balance: 0),
+                              loading: () => const AppBarSmall(balance: 0)),
                         ),
-                      );
-                    },
-                    childCount:
-                        userTxs.isLoading || userTxs.asData?.value == null
-                            ? 10
-                            : userTxs.asData!.value.length,
-                  ),
-                ),
-                if (userTxs.isLoading)
-                  const SliverFillRemaining(
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.black,
+                        background: const Column(
+                          children: [
+                            Gaps.h24,
+                            TotalBalanceWidget(),
+                            Gaps.h24,
+                            SendReceiveBtn(),
+                            Gaps.h24,
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                if (userTxs.hasError)
-                  SliverFillRemaining(
-                    child: Center(
-                      child: Text('Error: ${userTxs.error}'),
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (BuildContext context, int index) {
+                          return AnimationConfiguration.staggeredList(
+                            position: index,
+                            duration: const Duration(milliseconds: 375),
+                            child: SlideAnimation(
+                              verticalOffset: 50.0,
+                              child: FadeInAnimation(
+                                child: isLoading
+                                    ? Shimmer.fromColors(
+                                        baseColor: Colors.black87,
+                                        highlightColor: Colors.grey[600]!,
+                                        child: Container(
+                                          margin: const EdgeInsets.symmetric(
+                                              vertical: 4.0, horizontal: 12.0),
+                                          height: 80,
+                                          decoration: BoxDecoration(
+                                            color: Colors.black,
+                                            borderRadius:
+                                                BorderRadius.circular(12.0),
+                                          ),
+                                        ),
+                                      )
+                                    : TxHistoryItem(value: filteredTxs[index]),
+                              ),
+                            ),
+                          );
+                        },
+                        childCount:
+                            userTxs.isLoading || userTxs.asData?.value == null
+                                ? 10
+                                : filteredTxs.length,
+                      ),
                     ),
-                  ),
-              ],
+                    if (userTxs.isLoading)
+                      const SliverFillRemaining(
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    if (userTxs.hasError)
+                      SliverFillRemaining(
+                        child: Center(
+                          child: Text('Error: ${userTxs.error}'),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
-          ),
+            Positioned(
+                top: 10,
+                right: 10,
+                child: IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: () {
+                    ref.read(userWalletProvider.notifier).clear();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const LoginScreen()),
+                    );
+                  },
+                ))
+          ],
         ),
       ),
     );
@@ -317,8 +339,8 @@ class _InvestCardState extends ConsumerState<InvestCard> {
                       amount: _amountController.text,
                     );
                   });
-              ref.read(userBalanceProvider.notifier).updateState();
-              ref.read(userTxsProvider.notifier).updateState();
+              ref.read(userBalanceProvider.notifier).refresh();
+              ref.read(userTxsProvider.notifier).refresh();
               Navigator.pop(context);
             },
             isDisable: _amountController.text == "",
@@ -369,13 +391,13 @@ class _InvestingCardState extends State<InvestingCard> {
   }
 }
 
-class QrcodeCard extends StatelessWidget {
-  const QrcodeCard({
-    super.key,
-  });
+class QrcodeCard extends ConsumerWidget {
+  const QrcodeCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final walletData = ref.watch(userWalletProvider);
+    final qrCodeData = walletData.value?.walletAddress ?? '';
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -383,7 +405,7 @@ class QrcodeCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: PrettyQrView.data(
-                data: Constants.simpleAccount.hex,
+                data: qrCodeData,
                 decoration: const PrettyQrDecoration(
                   image: PrettyQrDecorationImage(
                     image: AssetImage('assets/icons/usdc.png'),
@@ -402,7 +424,7 @@ class QrcodeCard extends StatelessWidget {
           DefaultButton(
             onPressed: () {
               Clipboard.setData(
-                ClipboardData(text: Constants.simpleAccount.hex),
+                ClipboardData(text: qrCodeData),
               );
               customToast(
                 'Copied to clipboard!',

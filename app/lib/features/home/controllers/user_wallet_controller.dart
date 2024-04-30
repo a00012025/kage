@@ -25,7 +25,7 @@ class UserWallet extends _$UserWallet {
     final wallet = WalletData(
       privateKey: privateKey,
       ownerAddress: ownerAddress,
-      walletAddress: '0x1234',
+      walletAddress: await getSmartContractWalletAddress(ownerAddress),
     );
     await saveWallet(wallet);
     state = AsyncValue.data(wallet);
@@ -36,9 +36,16 @@ class UserWallet extends _$UserWallet {
     final wallet = WalletData(
       mnemonic: mnemonic,
       ownerAddress: ownerAddress,
-      walletAddress: '0x1234',
+      walletAddress: await getSmartContractWalletAddress(ownerAddress),
     );
+    await saveWallet(wallet);
     state = AsyncValue.data(wallet);
+  }
+
+  Future<void> clear() async {
+    const storage = FlutterSecureStorage();
+    await storage.delete(key: 'wallet_data');
+    state = AsyncValue.data(WalletData.empty());
   }
 }
 

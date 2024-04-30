@@ -1,4 +1,6 @@
-import 'package:app/utils/gaps.dart';
+import 'package:app/features/home/controllers/user_wallet_controller.dart';
+import 'package:app/features/home/home_screen.dart';
+import 'package:app/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,39 +9,38 @@ class SplashScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              const Spacer(),
-              const Text(
-                "🌗",
-                style: TextStyle(fontSize: 48),
-                textAlign: TextAlign.center,
-              ),
-              Gaps.h12,
-              Text(
-                'Take Charge of Your Savings',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              Gaps.h4,
-              Text(
-                'Smart, Secure, Yours.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const Spacer(),
-            ],
-          ),
+    ref.listen(userWalletProvider, (prev, walletData) {
+      walletData.when(
+        data: (wallet) {
+          if (wallet.walletAddress.isNotEmpty) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+            );
+          }
+        },
+        loading: () {},
+        error: (e, s) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        },
+      );
+    });
+
+    return const Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            CircularProgressIndicator(),
+          ],
         ),
       ),
     );

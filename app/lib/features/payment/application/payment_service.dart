@@ -1,10 +1,10 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:app/features/common/constants.dart';
-import 'package:app/features/common/contract/aave_contract.dart';
-import 'package:app/features/common/contract/contract_util.dart';
-import 'package:app/features/common/contract/entry_point_contract.dart';
-import 'package:app/features/common/contract/erc20_contract.dart';
-import 'package:app/features/common/contract/simple_account_factory_contract.dart';
+import 'package:app/contracts/aave_contract.dart';
+import 'package:app/contracts/contract_util.dart';
+import 'package:app/contracts/entry_point_contract.dart';
+import 'package:app/contracts/erc20_contract.dart';
+import 'package:app/contracts/simple_account_factory_contract.dart';
 import 'package:app/features/payment/domain/chain.dart';
 import 'package:app/features/payment/domain/user_operation.dart';
 import 'package:eth_sig_util/eth_sig_util.dart';

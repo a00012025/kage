@@ -1,7 +1,8 @@
 import 'dart:convert';
 
 import 'package:app/features/common/constants.dart';
-import 'package:app/features/common/contract/erc20_contract.dart';
+import 'package:app/contracts/erc20_contract.dart';
+import 'package:app/features/home/controllers/user_wallet_controller.dart';
 import 'package:app/features/home/domain/tx_data.dart';
 import 'package:app/features/home/domain/tx_log.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -12,23 +13,26 @@ import 'package:http/http.dart' as http;
 
 part 'user_txs_controller.g.dart';
 
-@Riverpod(keepAlive: true)
+@riverpod
 class UserTxs extends _$UserTxs {
-  Future<void> updateState() async {
-    state = await AsyncValue.guard(() async {
-      return await getUsdcTxs();
-    });
+  @override
+  Future<List<TxData>> build() async {
+    final wallet = await ref.watch(userWalletProvider.future);
+    return getUsdcTxs(wallet.walletAddress);
   }
 
-  @override
-  FutureOr<List<TxData>> build() {
-    state = const AsyncLoading();
-    return getUsdcTxs();
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    final wallet = await ref.read(userWalletProvider.future);
+    final txs = await getUsdcTxs(wallet.walletAddress);
+    state = AsyncValue.data(txs);
   }
 }
 
-Future<List<TxData>> getUsdcTxs() async {
-  final address = Constants.simpleAccount;
+Future<List<TxData>> getUsdcTxs(String walletAddress) async {
+  if (walletAddress.isEmpty) return const [];
+
+  final address = EthereumAddress.fromHex(walletAddress);
   final paymasterTopic =
       '0x${Constants.payMaster.hex.substring(2).padLeft(64, '0')}';
   final [fromLogs, toLogs] = await Future.wait([

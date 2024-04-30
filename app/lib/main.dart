@@ -1,6 +1,6 @@
 import 'package:app/features/home/controllers/user_balance_controller.dart';
 import 'package:app/features/home/controllers/user_txs_controller.dart';
-import 'package:app/login_screen.dart';
+import 'package:app/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oktoast/oktoast.dart';
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
             scaffoldBackgroundColor: Colors.white,
             useMaterial3: true,
           ),
-          home: const LoginScreen(),
+          home: const SplashScreen(),
         ),
       ),
     );

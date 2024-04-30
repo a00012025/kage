@@ -1,9 +1,35 @@
 import 'dart:convert';
 import 'dart:typed_data';
-
+import 'package:app/contracts/simple_account_factory_contract.dart';
+import 'package:app/utils/bip39_wordlist.dart';
+import 'package:http/http.dart' as http;
+import 'package:app/features/common/constants.dart';
 import 'package:web3dart/web3dart.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:blockchain_utils/bip/bip/bip32/slip10/bip32_slip10_secp256k1.dart';
+
+bool isValidPrivateKey(String privateKey) {
+  try {
+    if (privateKey.startsWith('0x') && privateKey.length != 66) {
+      return false;
+    }
+    if (!privateKey.startsWith('0x') && privateKey.length != 64) {
+      return false;
+    }
+    EthPrivateKey.fromHex(privateKey);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+bool isValidMnemonic(String mnemonic) {
+  final words = mnemonic.split(" ");
+  if (words.length != 12) {
+    return false;
+  }
+  return words.every((word) => bip39List.contains(word));
+}
 
 String privateKeyToAddress(String privateKey) {
   final priKey = EthPrivateKey.fromHex(privateKey);
@@ -40,4 +66,20 @@ Future<Uint8List> mnemonicToSeed(String mnemonic) async {
   final seed = await derivedKey.extractBytes();
   final uint8Seed = Uint8List.fromList(seed);
   return uint8Seed;
+}
+
+Future<String> getSmartContractWalletAddress(String owner) async {
+  final client = Web3Client(Constants.rpcUrl, http.Client());
+  final abContract = SimpleAccountFactoryContract.create();
+  final res = await client.call(
+    contract: abContract,
+    function: abContract.getAddress,
+    params: [
+      EthereumAddress.fromHex(owner),
+      Constants.usdc,
+      Constants.payMaster,
+      BigInt.zero,
+    ],
+  );
+  return res[0].toString();
 }
