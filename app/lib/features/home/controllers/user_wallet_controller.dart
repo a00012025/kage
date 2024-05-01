@@ -21,32 +21,44 @@ class UserWallet extends _$UserWallet {
   }
 
   Future<void> importPrivateKey(String privateKey) async {
-    final ownerAddress = privateKeyToAddress(privateKey);
-    final wallet = WalletData(
-      privateKey: privateKey,
-      ownerAddress: ownerAddress,
-      walletAddress: await getSmartContractWalletAddress(ownerAddress),
-    );
-    await saveWallet(wallet);
-    state = AsyncValue.data(wallet);
+    try {
+      final ownerAddress = privateKeyToAddress(privateKey);
+      final wallet = WalletData(
+        privateKey: privateKey,
+        ownerAddress: ownerAddress,
+        walletAddress: await getSmartContractWalletAddress(ownerAddress),
+      );
+      await saveWallet(wallet);
+      state = AsyncValue.data(wallet);
+    } catch (e, s) {
+      state = AsyncValue.error(e, s);
+    }
   }
 
   Future<void> generateNewWallet() async {
-    final mnemonic = bip39.generateMnemonic();
-    await importMnemonic(mnemonic);
+    try {
+      final mnemonic = bip39.generateMnemonic();
+      await importMnemonic(mnemonic);
+    } catch (e, s) {
+      state = AsyncValue.error(e, s);
+    }
   }
 
   Future<void> importMnemonic(String mnemonic) async {
-    final privateKey = await mnemonicToPrivateKey(mnemonic);
-    final ownerAddress = privateKeyToAddress(privateKey);
-    final wallet = WalletData(
-      mnemonic: mnemonic,
-      privateKey: privateKey,
-      ownerAddress: ownerAddress,
-      walletAddress: await getSmartContractWalletAddress(ownerAddress),
-    );
-    await saveWallet(wallet);
-    state = AsyncValue.data(wallet);
+    try {
+      final privateKey = await mnemonicToPrivateKey(mnemonic);
+      final ownerAddress = privateKeyToAddress(privateKey);
+      final wallet = WalletData(
+        mnemonic: mnemonic,
+        privateKey: privateKey,
+        ownerAddress: ownerAddress,
+        walletAddress: await getSmartContractWalletAddress(ownerAddress),
+      );
+      await saveWallet(wallet);
+      state = AsyncValue.data(wallet);
+    } catch (e, s) {
+      state = AsyncValue.error(e, s);
+    }
   }
 
   Future<void> clear() async {

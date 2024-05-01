@@ -38,8 +38,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         },
         loading: () {},
         error: (e, s) {
-          customToast('Something went wrong, please try again',
-              showIcon: false);
+          customToast('Something went wrong: $e', showIcon: false);
           setState(() {
             loading = false;
           });
