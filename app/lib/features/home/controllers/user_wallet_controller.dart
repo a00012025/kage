@@ -34,7 +34,6 @@ class UserWallet extends _$UserWallet {
 
   Future<void> generateNewWallet() async {
     final mnemonic = bip39.generateMnemonic();
-    print('mnemonic: $mnemonic');
     await importMnemonic(mnemonic);
   }
 
@@ -47,7 +46,6 @@ class UserWallet extends _$UserWallet {
       ownerAddress: ownerAddress,
       walletAddress: await getSmartContractWalletAddress(ownerAddress),
     );
-    print('wallet: $wallet');
     await saveWallet(wallet);
     state = AsyncValue.data(wallet);
   }

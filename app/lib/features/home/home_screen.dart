@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:app/features/home/controllers/user_wallet_controller.dart';
-import 'package:app/login_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app/features/common/constants.dart';
 import 'package:app/features/common/sending_tx_card.dart';
@@ -48,13 +47,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     double expandedHeight = 300;
     double appBarHeight = kToolbarHeight;
     double offset = _scrollController.offset;
-    if (offset < 200) {
+    if (offset < 100) {
       _opacity = 0;
       setState(() {});
       return;
     }
     double newOpacity = (offset / (expandedHeight - appBarHeight)).clamp(0, 1);
-    // 更新透明度
     setState(() {
       _opacity = newOpacity;
     });
@@ -83,6 +81,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 },
                 child: CustomScrollView(
                   controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
                   slivers: <Widget>[
                     SliverAppBar(
                       pinned: true, // 固定AppBar在顶部
@@ -151,7 +150,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     if ((!userTxs.isLoading || userTxs.isReloading) &&
                         filteredTxs.isEmpty)
-                      const SliverFillRemaining(
+                      const SliverToBoxAdapter(
                         child: Align(
                           alignment: Alignment.topCenter,
                           child: Text(
@@ -163,11 +162,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                       ),
-                    if ((!userTxs.isLoading || userTxs.isReloading) &&
-                        filteredTxs.isNotEmpty)
-                      const SliverFillRemaining(child: SizedBox()),
+                    if (!userTxs.isLoading)
+                      const SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: 50,
+                        ),
+                      ),
                     if (userTxs.isLoading && !userTxs.isReloading)
-                      const SliverFillRemaining(
+                      const SliverToBoxAdapter(
                         child: Center(
                           child: CircularProgressIndicator(
                             color: Colors.black,
@@ -175,7 +177,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                     if (userTxs.hasError)
-                      SliverFillRemaining(
+                      SliverToBoxAdapter(
                         child: Center(
                           child: Text('Error: ${userTxs.error}'),
                         ),
@@ -184,23 +186,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-            Positioned(
-                top: 10,
-                right: 10,
-                child: Opacity(
-                  opacity: 1 - _opacity,
-                  child: IconButton(
-                    icon: const Icon(Icons.logout),
-                    onPressed: () {
-                      ref.read(userWalletProvider.notifier).clear();
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const LoginScreen()),
-                      );
-                    },
-                  ),
-                ))
+            // Positioned(
+            //     top: 10,
+            //     right: 10,
+            //     child: Opacity(
+            //       opacity: 1 - _opacity,
+            //       child: IconButton(
+            //         icon: const Icon(Icons.logout),
+            //         onPressed: () {
+            //           ref.read(userWalletProvider.notifier).clear();
+            //           Navigator.pushReplacement(
+            //             context,
+            //             MaterialPageRoute(
+            //                 builder: (context) => const LoginScreen()),
+            //           );
+            //         },
+            //       ),
+            //     ))
           ],
         ),
       ),

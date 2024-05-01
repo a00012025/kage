@@ -1,5 +1,6 @@
 import 'package:app/features/home/controllers/aave_data_controller.dart';
 import 'package:app/features/home/controllers/user_balance_controller.dart';
+import 'package:app/features/home/controllers/user_preference_controller.dart';
 import 'package:app/features/home/domain/jumping_dot.dart';
 import 'package:app/utils/gaps.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,8 @@ class TotalBalanceWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userBalance = ref.watch(userBalanceProvider);
+    final userPreference = ref.watch(userPreferenceProvider);
+    final isObscureBalance = userPreference.value?.isObscureBalance ?? false;
     final aaveApy = ref.watch(aaveDataProvider);
 
     return Column(
@@ -37,32 +40,45 @@ class TotalBalanceWidget extends ConsumerWidget {
             userBalance.when(
               data: (value) {
                 final balance = value.total.toStringAsFixed(2);
-                return RichText(
-                  text: TextSpan(
-                    text: balance.split('.')[0],
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.black,
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
+                return GestureDetector(
+                  onTap: () {
+                    ref
+                        .read(userPreferenceProvider.notifier)
+                        .switchObscureBalance();
+                  },
+                  child: RichText(
+                    text: TextSpan(
+                      text: isObscureBalance
+                          ? getObscureString(3)
+                          : balance.split('.')[0],
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.black,
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                          ),
+                      children: [
+                        TextSpan(
+                          text: isObscureBalance
+                              ? getObscureString(2)
+                              : balance.split('.').length > 1
+                                  ? '.${balance.split('.')[1]}'
+                                  : '.00',
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 28,
+                                  ),
                         ),
-                    children: [
-                      TextSpan(
-                        text: balance.split('.').length > 1
-                            ? '.${balance.split('.')[1]}'
-                            : '.00',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 28,
-                            ),
-                      ),
-                      TextSpan(
-                        text: 'USDC',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                      ),
-                    ],
+                        TextSpan(
+                          text: 'USDC',
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -104,4 +120,8 @@ class TotalBalanceWidget extends ConsumerWidget {
       ],
     );
   }
+}
+
+String getObscureString(int length) {
+  return '\u2217' * length;
 }
