@@ -1,5 +1,6 @@
 import 'package:app/extension/context_extension.dart';
 import 'package:app/features/common/custom_scaffold.dart';
+import 'package:app/features/common/kg_app_bar.dart';
 import 'package:app/utils/gaps.dart';
 import 'package:flutter/material.dart';
 
@@ -40,43 +41,46 @@ class SinglePageCustomScaffold extends StatelessWidget {
               return popValue ?? false;
             },
       child: isModalStyle
-          ? Scaffold(
+          ? KgAppBar(
               backgroundColor: Colors.transparent,
-              resizeToAvoidBottomInset: resizeToAvoidBottomInset,
-              body: Column(
-                children: [
-                  Flexible(
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Container(
-                        height: height ?? context.height * 0.9,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).scaffoldBackgroundColor,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(30),
-                            topRight: Radius.circular(30),
-                          ),
-                        ),
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              width: 60,
-                              height: 4,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFE0E0E0),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(20.0)),
-                              ),
+              child: Scaffold(
+                backgroundColor: Colors.transparent,
+                resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+                body: Column(
+                  children: [
+                    Flexible(
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Container(
+                          height: height ?? context.height * 0.9,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(30),
+                              topRight: Radius.circular(30),
                             ),
-                            Expanded(child: body),
-                          ],
+                          ),
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                width: 60,
+                                height: 4,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFE0E0E0),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(20.0)),
+                                ),
+                              ),
+                              Expanded(child: body),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             )
           : CustomScaffold(

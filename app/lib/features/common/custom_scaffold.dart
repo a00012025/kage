@@ -1,4 +1,5 @@
 import 'dart:core';
+import 'package:app/features/common/kg_app_bar.dart';
 import 'package:flutter/material.dart';
 
 class CustomScaffold extends StatelessWidget {
@@ -40,26 +41,29 @@ class CustomScaffold extends StatelessWidget {
     return Scaffold(
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       backgroundColor: backgroundColor,
-      body: SafeArea(
-          bottom: !ignoreBottom,
-          minimum: padding ?? EdgeInsets.zero,
-          child: useScrollView
-              ? SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  child: Column(
+      body: KgAppBar(
+        backgroundColor: backgroundColor,
+        child: SafeArea(
+            bottom: !ignoreBottom,
+            minimum: padding ?? EdgeInsets.zero,
+            child: useScrollView
+                ? SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        header,
+                        body,
+                      ],
+                    ))
+                : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       header,
                       body,
                     ],
-                  ))
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    header,
-                    body,
-                  ],
-                )),
+                  )),
+      ),
     );
   }
 }
