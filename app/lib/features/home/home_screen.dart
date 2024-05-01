@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:app/extension/context_extension.dart';
 import 'package:app/features/home/controllers/user_wallet_controller.dart';
 import 'package:app/setting_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -435,40 +436,47 @@ class QrcodeCard extends ConsumerWidget {
     final qrCodeData = walletData.value?.walletAddress ?? '';
     return Padding(
       padding: const EdgeInsets.all(24.0),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: PrettyQrView.data(
-                data: qrCodeData,
-                decoration: const PrettyQrDecoration(
-                  image: PrettyQrDecorationImage(
-                    image: AssetImage('assets/icons/usdc.png'),
-                  ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final size = min(constraints.maxWidth, constraints.maxHeight - 100);
+          return Column(
+            children: [
+              SizedBox(
+                width: size,
+                height: size,
+                child: PrettyQrView.data(
+                    data: qrCodeData,
+                    decoration: const PrettyQrDecoration(
+                      image: PrettyQrDecorationImage(
+                        image: AssetImage('assets/icons/usdc.png'),
+                      ),
+                    ),
+                    errorCorrectLevel: QrErrorCorrectLevel.H),
+              ),
+              const Expanded(child: SizedBox.shrink()),
+              const Text(
+                'Only supports Arbitrum USDC now',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
-                errorCorrectLevel: QrErrorCorrectLevel.H),
-          ),
-          const Text(
-            'Only supports Arbitrum USDC now',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-          Gaps.h8,
-          DefaultButton(
-            onPressed: () {
-              Clipboard.setData(
-                ClipboardData(text: qrCodeData),
-              );
-              customToast(
-                'Copied to clipboard!',
-              );
-            },
-            text: "Copy Address",
-            showIcon: true,
-          ),
-        ],
+              ),
+              Gaps.h8,
+              DefaultButton(
+                onPressed: () {
+                  Clipboard.setData(
+                    ClipboardData(text: qrCodeData),
+                  );
+                  customToast(
+                    'Copied to clipboard!',
+                  );
+                },
+                text: "Copy Address",
+                showIcon: true,
+              ),
+            ],
+          );
+        },
       ),
     );
   }
