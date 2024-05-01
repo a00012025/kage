@@ -1,9 +1,14 @@
+import 'package:app/export_wallet_screen.dart';
 import 'package:app/extension/context_extension.dart';
 import 'package:app/features/common/single_page_custom_scaffold.dart';
 import 'package:app/features/home/controllers/user_wallet_controller.dart';
 import 'package:app/login_screen.dart';
+import 'package:app/utils/default_button.dart';
+import 'package:app/utils/gaps.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class SettingScreen extends ConsumerWidget {
   const SettingScreen({super.key});
@@ -26,8 +31,22 @@ class SettingScreen extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton(
+            Gaps.h32,
+            DefaultButton(
+              onPressed: () {
+                Navigator.of(context)
+                    .pushReplacement(CupertinoModalBottomSheetRoute(
+                  builder: (context) => const ExportWalletScreen(),
+                  closeProgressThreshold: 0.9,
+                  expanded: false,
+                  duration: 260.milliseconds,
+                ));
+              },
+              text: 'Export Wallet',
+              shimmer: false,
+            ),
+            Gaps.h12,
+            DefaultButton(
               onPressed: () {
                 ref.read(userWalletProvider.notifier).clear();
                 Navigator.pushAndRemoveUntil(
@@ -36,7 +55,14 @@ class SettingScreen extends ConsumerWidget {
                   (route) => false,
                 );
               },
-              child: const Text('Logout'),
+              text: 'Logout',
+              shimmer: false,
+              textStyle: const TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+              backgroundColor: Colors.white,
+              borderColor: Colors.red,
             ),
           ],
         ),

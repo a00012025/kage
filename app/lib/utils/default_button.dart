@@ -5,13 +5,16 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 class DefaultButton extends StatelessWidget {
   const DefaultButton({
+    super.key,
     required this.onPressed,
     this.text = '',
     this.textStyle,
-    super.key,
     this.isDisable = false,
     this.showIcon = false,
     this.child,
+    this.shimmer = true,
+    this.backgroundColor,
+    this.borderColor,
   });
   final VoidCallback onPressed;
   final String text;
@@ -19,19 +22,25 @@ class DefaultButton extends StatelessWidget {
   final bool isDisable;
   final bool showIcon;
   final Widget? child;
+  final bool shimmer;
+  final Color? backgroundColor;
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
     return AppTap(
-      onTap: () {
-        if (!isDisable) onPressed();
-      },
+      onTap: isDisable ? () {} : onPressed,
       child: Stack(
         children: [
           DecoratedBox(
             decoration: BoxDecoration(
-              color: isDisable ? Colors.grey : Colors.black,
+              color:
+                  backgroundColor ?? (isDisable ? Colors.grey : Colors.black),
               borderRadius: BorderRadius.circular(Spacings.px12),
+              border: Border.all(
+                color: borderColor ?? (isDisable ? Colors.grey : Colors.black),
+                width: 1,
+              ),
             ),
             child: child ??
                 Container(
@@ -40,17 +49,20 @@ class DefaultButton extends StatelessWidget {
                   child: Text(
                     text,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: textStyle ??
+                        Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                   ),
                 ),
           )
               .animate(
                 onPlay: (controller) => controller.repeat(reverse: false),
               )
-              .shimmer(duration: 1.3.seconds, delay: 3.seconds),
+              .shimmer(
+                  duration: shimmer ? 1.3.seconds : 0.seconds,
+                  delay: 3.seconds),
           if (showIcon)
             Positioned(
               top: 12,

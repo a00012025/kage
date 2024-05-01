@@ -189,8 +189,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             Positioned(
-              top: 10,
-              right: 10,
+              top: 12,
+              right: 16,
               child: Opacity(
                 opacity: 1 - _opacity,
                 child: IconButton(

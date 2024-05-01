@@ -101,6 +101,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   );
                 },
                 text: "I already have a wallet",
+                textStyle: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(color: Colors.black),
+                backgroundColor: Colors.white,
+                borderColor: Colors.black38,
+                shimmer: false,
               ),
             ],
           ),
