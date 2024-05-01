@@ -6,6 +6,7 @@ import 'package:app/utils/toast.dart';
 import 'package:app/utils/wallet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class RecoverScreen extends ConsumerStatefulWidget {
   const RecoverScreen({super.key});
@@ -27,7 +28,7 @@ class _RecoverScreenState extends ConsumerState<RecoverScreen> {
             customToast('Import successfully');
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
+              MaterialWithModalsPageRoute(builder: (_) => const HomeScreen()),
               (route) => false,
             );
           } else {

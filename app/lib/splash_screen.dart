@@ -3,6 +3,7 @@ import 'package:app/features/home/home_screen.dart';
 import 'package:app/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});
@@ -15,7 +16,7 @@ class SplashScreen extends ConsumerWidget {
           if (wallet.walletAddress.isNotEmpty) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
+              MaterialWithModalsPageRoute(builder: (_) => const HomeScreen()),
             );
           } else {
             Navigator.pushReplacement(

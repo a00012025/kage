@@ -6,6 +6,7 @@ import 'package:app/utils/gaps.dart';
 import 'package:app/utils/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -26,7 +27,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             customToast('Create successfully');
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
+              MaterialWithModalsPageRoute(builder: (_) => const HomeScreen()),
               (route) => false,
             );
           } else {

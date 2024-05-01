@@ -1,4 +1,5 @@
 import 'package:app/features/home/controllers/aave_data_controller.dart';
+import 'package:intl/intl.dart';
 import 'package:app/features/home/controllers/user_balance_controller.dart';
 import 'package:app/features/home/controllers/user_preference_controller.dart';
 import 'package:app/features/home/domain/jumping_dot.dart';
@@ -40,6 +41,9 @@ class TotalBalanceWidget extends ConsumerWidget {
             userBalance.when(
               data: (value) {
                 final balance = value.total.toStringAsFixed(2);
+                // format numeric with thousand separator
+                final formattedBalance = NumberFormat.decimalPattern()
+                    .format(double.parse(balance.split('.')[0]));
                 return GestureDetector(
                   onTap: () {
                     ref
@@ -50,7 +54,7 @@ class TotalBalanceWidget extends ConsumerWidget {
                     text: TextSpan(
                       text: isObscureBalance
                           ? getObscureString(3)
-                          : balance.split('.')[0],
+                          : formattedBalance,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color: Colors.black,
                             fontSize: 48,
@@ -70,7 +74,7 @@ class TotalBalanceWidget extends ConsumerWidget {
                                   ),
                         ),
                         TextSpan(
-                          text: 'USDC',
+                          text: ' USDC',
                           style:
                               Theme.of(context).textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.bold,

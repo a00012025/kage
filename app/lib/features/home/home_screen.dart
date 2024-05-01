@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:app/features/home/controllers/user_wallet_controller.dart';
+import 'package:app/setting_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app/features/common/constants.dart';
 import 'package:app/features/common/sending_tx_card.dart';
@@ -18,6 +19,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -186,23 +188,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-            // Positioned(
-            //     top: 10,
-            //     right: 10,
-            //     child: Opacity(
-            //       opacity: 1 - _opacity,
-            //       child: IconButton(
-            //         icon: const Icon(Icons.logout),
-            //         onPressed: () {
-            //           ref.read(userWalletProvider.notifier).clear();
-            //           Navigator.pushReplacement(
-            //             context,
-            //             MaterialPageRoute(
-            //                 builder: (context) => const LoginScreen()),
-            //           );
-            //         },
-            //       ),
-            //     ))
+            Positioned(
+              top: 10,
+              right: 10,
+              child: Opacity(
+                opacity: 1 - _opacity,
+                child: IconButton(
+                  icon: const Icon(Icons.settings),
+                  onPressed: () {
+                    if (_opacity > 0.5) {
+                      return;
+                    }
+                    Navigator.of(context).push(CupertinoModalBottomSheetRoute(
+                      builder: (context) => const SettingScreen(),
+                      closeProgressThreshold: 0.9,
+                      expanded: false,
+                      duration: 260.milliseconds,
+                    ));
+                  },
+                ),
+              ),
+            ),
           ],
         ),
       ),
