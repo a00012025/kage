@@ -17,7 +17,6 @@ class UserWallet extends _$UserWallet {
     if (data == null) {
       return WalletData.empty();
     }
-    print('data: $data');
     return WalletData.fromJson(jsonDecode(data));
   }
 
