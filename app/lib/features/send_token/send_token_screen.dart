@@ -35,7 +35,7 @@ class _SendTokenScreenState extends ConsumerState<SendTokenScreen> {
   Widget build(BuildContext context) {
     final userBalance = ref.watch(userBalanceProvider);
     final remaining = userBalance.value?.total ?? 0;
-    final maxAmount = max(remaining - 0.5, 0);
+    final maxAmount = max(remaining - 0.1, 0);
 
     return Scaffold(
       body: SafeArea(

@@ -314,7 +314,7 @@ class _InvestCardState extends ConsumerState<InvestCard> {
   Widget build(BuildContext context) {
     final userBalance = ref.watch(userBalanceProvider);
     final usdcBalance = userBalance.value?.usdc ?? 0;
-    final maxAmount = max(usdcBalance - 0.5, 0);
+    final maxAmount = max(usdcBalance - 0.1, 0);
 
     return Padding(
       padding: const EdgeInsets.all(24.0),

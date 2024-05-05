@@ -95,7 +95,7 @@ class TotalBalanceWidget extends ConsumerWidget {
             ),
           ],
         ),
-        // Gaps.h8,
+        Gaps.h4,
         aaveApy.when(
           data: (value) {
             return Text(
@@ -117,7 +117,7 @@ class TotalBalanceWidget extends ConsumerWidget {
           },
           error: (error, _) => Text('Error: $error'),
         ),
-        Gaps.h8,
+        Gaps.h12,
         userProfit.when(
             data: (profit) => Text.rich(
                   TextSpan(

@@ -76,10 +76,11 @@ class PaymentService {
       params: [walletData.account],
     ))
         .first as BigInt;
-    if (usdcBalance - rawAmount < BigInt.from(500000)) {
-      // need to withdraw first if usdc balance will be less than 0.5
+    final minLeftAmount = BigInt.from(0.1 * 1e6);
+    if (usdcBalance - rawAmount < minLeftAmount) {
+      // need to withdraw first if usdc balance will be less than 0.1
       final aaveContract = AaveContract.create();
-      final toWithdraw = rawAmount - usdcBalance + BigInt.from(500000);
+      final toWithdraw = rawAmount - usdcBalance + minLeftAmount;
       final withdrawCallData = aaveContract.function('withdraw').encodeCall([
         Constants.usdc,
         toWithdraw,
