@@ -1,4 +1,5 @@
 import 'package:app/features/home/controllers/aave_data_controller.dart';
+import 'package:app/features/home/controllers/user_profit_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:app/features/home/controllers/user_balance_controller.dart';
 import 'package:app/features/home/controllers/user_preference_controller.dart';
@@ -18,16 +19,11 @@ class TotalBalanceWidget extends ConsumerWidget {
     final userPreference = ref.watch(userPreferenceProvider);
     final isObscureBalance = userPreference.value?.isObscureBalance ?? false;
     final aaveApy = ref.watch(aaveDataProvider);
+    final userProfit = ref.watch(userProfitProvider);
+    print('userProfit: $userProfit');
 
     return Column(
       children: [
-        Text(
-          '🥷 Total Balance',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        Gaps.h12,
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -121,6 +117,41 @@ class TotalBalanceWidget extends ConsumerWidget {
           },
           error: (error, _) => Text('Error: $error'),
         ),
+        Gaps.h8,
+        userProfit.when(
+            data: (profit) => Text.rich(
+                  TextSpan(
+                    text: '🥷 Total Profit: ',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                    children: [
+                      TextSpan(
+                        text: profit.toStringAsFixed(3),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
+                      ),
+                      TextSpan(
+                        text: ' USDC',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                    ],
+                  ),
+                ),
+            loading: () => const SizedBox(
+                  width: 32.0,
+                  height: 32.0,
+                  child: JumpingDotIndicator(
+                    duration: Duration(milliseconds: 300),
+                  ),
+                ),
+            error: (e, s) => const SizedBox.shrink()),
       ],
     );
   }

@@ -1,25 +1,24 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'user_wallet_controller.dart';
+part of 'user_profit_controller.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$userWalletHash() => r'f287b8fec7eecc60d432235140e022009b77b7eb';
+String _$userProfitHash() => r'a701964dcc60e6a238a28ae2c2e27d1277ec2863';
 
-/// See also [UserWallet].
-@ProviderFor(UserWallet)
-final userWalletProvider =
-    AsyncNotifierProvider<UserWallet, WalletData>.internal(
-  UserWallet.new,
-  name: r'userWalletProvider',
+/// See also [userProfit].
+@ProviderFor(userProfit)
+final userProfitProvider = AutoDisposeFutureProvider<double>.internal(
+  userProfit,
+  name: r'userProfitProvider',
   debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$userWalletHash,
+      const bool.fromEnvironment('dart.vm.product') ? null : _$userProfitHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$UserWallet = AsyncNotifier<WalletData>;
+typedef UserProfitRef = AutoDisposeFutureProviderRef<double>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
