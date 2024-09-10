@@ -409,6 +409,7 @@ class _InvestingCardState extends ConsumerState<InvestingCard> {
     if ((userWallet.value?.walletAddress ?? '').isEmpty) {
       return;
     }
+    // hash = await service.sendTransferUsdtOperation(userWallet.value!);
     hash =
         await service.sendInvestUserOperation(userWallet.value!, widget.amount);
     setState(() {

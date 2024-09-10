@@ -18,6 +18,10 @@ class Constants {
     "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
   );
 
+  static EthereumAddress usdt = EthereumAddress.fromHex(
+    "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+  );
+
   static EthereumAddress aave = EthereumAddress.fromHex(
     "0x794a61358d6845594f94dc1db02a252b5b4814ad",
   );
